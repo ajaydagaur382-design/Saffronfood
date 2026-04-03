@@ -5,9 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Saffron Food</title>
 
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#000000">
-
 <style>
 body{margin:0;font-family:Poppins;background:#0f0f0f;color:white;}
 
@@ -24,14 +21,9 @@ z-index:1000;
 box-shadow:0 4px 15px rgba(0,0,0,0.3);
 }
 
-.header img{
-width:45px;
-border-radius:50%;
-border:2px solid white;
-}
-
-.header h2{margin:0;font-size:18px;font-weight:600;}
-.header p{margin:0;font-size:12px;opacity:0.9;}
+.header img{width:45px;border-radius:50%;border:2px solid white;}
+.header h2{margin:0;font-size:18px;}
+.header p{margin:0;font-size:12px;}
 
 .search{padding:10px;}
 .search input{width:100%;padding:10px;border-radius:6px;border:none;}
@@ -46,20 +38,24 @@ padding-bottom:80px;
 
 .card{
 background:#1c1c1c;
-padding:10px;
-border-radius:10px;
+border-radius:12px;
+overflow:hidden;
 }
 
-/* ✅ IMAGE CSS */
-.food-img{
+.card img{
 width:100%;
 height:120px;
 object-fit:cover;
-border-radius:10px;
-margin-bottom:8px;
 }
 
-.price{color:gold;margin:5px 0;}
+.card-info{
+padding:10px;
+display:flex;
+flex-direction:column;
+gap:5px;
+}
+
+.price{color:gold;}
 .rating{font-size:12px;color:#00ff9d;}
 
 button{
@@ -81,10 +77,7 @@ justify-content:space-between;
 
 .popup{
 position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
+top:0;left:0;width:100%;height:100%;
 background:#0009;
 display:none;
 justify-content:center;
@@ -100,7 +93,6 @@ max-width:220px;
 display:flex;
 flex-direction:column;
 gap:10px;
-box-shadow:0 10px 25px rgba(0,0,0,0.3);
 }
 
 h2{grid-column:1/-1;color:gold;}
@@ -160,60 +152,47 @@ Total ₹<span id="total">0</span>
 let items = [
 
 {category:"Burgers"},
-{name:"Aloo tikki burger", price:39, img:"burger.jpg"},
-{name:"Classic veg burger", price:49, img:"burger.jpg"},
-{name:"Veg cheese burger", price:59, img:"burger.jpg"},
-{name:"Double patty veg burger",price:79},
-{name:"Saffron Burger",price:99},
+{name:"Aloo tikki burger",price:39,img:"images/burger.jpg"},
+{name:"Classic veg burger",price:49,img:"images/burger.jpg"},
+{name:"Veg cheese burger",price:59,img:"images/burger.jpg"},
+{name:"Double patty veg burger",price:79,img:"images/burger.jpg"},
+{name:"Saffron Burger",price:99,img:"images/burger.jpg"},
 
 {category:"Snacks"},
-{name:"French fries",half:45,full:79},
-{name:"Chilli potato",half:59,full:109},
-{name:"Honey chilli potato",half:69,full:119},
+{name:"French fries",half:45,full:79,img:"images/fries.jpg"},
+{name:"Chilli potato",half:59,full:109,img:"images/fries.jpg"},
+{name:"Honey chilli potato",half:69,full:119,img:"images/fries.jpg"},
 
 {category:"Noodles"},
-{name:"Plain Veg Noodles",half:59,full:109},
-{name:"Veg Hakka Noodles",half:69,full:119},
-{name:"Veg Schezwan Noodles",half:79,full:139},
-{name:"Veg Chilli Garlic Noodles",half:89,full:159},
+{name:"Plain Veg Noodles",half:59,full:109,img:"images/noodles.jpg"},
+{name:"Veg Hakka Noodles",half:69,full:119,img:"images/noodles.jpg"},
+{name:"Veg Schezwan Noodles",half:79,full:139,img:"images/noodles.jpg"},
+{name:"Veg Chilli Garlic Noodles",half:89,full:159,img:"images/noodles.jpg"},
 
 {category:"Sandwiches"},
-{name:"Aloo Grilled Sandwich",price:49},
-{name:"Veg Grilled Sandwich",price:69},
-{name:"Veg Cheese Grilled Sandwich",price:79},
-{name:"Cheese Corn Grilled Sandwich",price:89},
-{name:"Paneer & Cheese Grilled Sandwich",price:99},
+{name:"Aloo Grilled Sandwich",price:49,img:"images/sandwich.jpg"},
+{name:"Veg Grilled Sandwich",price:69,img:"images/sandwich.jpg"},
+{name:"Veg Cheese Grilled Sandwich",price:79,img:"images/sandwich.jpg"},
+{name:"Cheese Corn Grilled Sandwich",price:89,img:"images/sandwich.jpg"},
+{name:"Paneer & Cheese Grilled Sandwich",price:99,img:"images/sandwich.jpg"},
 
 {category:"Pasta"},
-{name:"Veg Red Sauce Pasta",price:59},
-{name:"Veg White Sauce Pasta",price:69},
+{name:"Veg Red Sauce Pasta",price:59,img:"images/pasta.jpg"},
+{name:"Veg White Sauce Pasta",price:69,img:"images/pasta.jpg"},
 
 {category:"Momos"},
-{name:"Veg Momos Steam",half:39,full:69},
-{name:"Veg Momos Fried",half:49,full:79},
-{name:"Paneer Momos Steam",half:49,full:89},
-{name:"Paneer Momos Fried",half:69,full:119},
-
-{category:"Paratha"},
-{name:"Aloo Paratha",price:49},
-{name:"Aloo Pyaz Paratha",price:59},
-{name:"Gobhi Paratha",price:69},
-{name:"Paneer Paratha",price:79},
-{name:"Plain Curd",price:20},
-{name:"Boondi Raita",price:39},
-{name:"Sweet Lassi",price:49},
-
-{category:"Maggi"},
-{name:"Plain Maggi",price:39},
-{name:"Veg Maggi",price:49},
+{name:"Veg Momos Steam",half:39,full:69,img:"images/momos.jpg"},
+{name:"Veg Momos Fried",half:49,full:79,img:"images/momos.jpg"},
+{name:"Paneer Momos Steam",half:49,full:89,img:"images/momos.jpg"},
+{name:"Paneer Momos Fried",half:69,full:119,img:"images/momos.jpg"},
 
 {category:"Rice"},
-{name:"Veg Fried Rice",half:59,full:109},
-{name:"Classic Spicy Veg Fried Rice",half:69,full:119},
-{name:"Veg Schezwan Fried Rice",half:79,full:149},
+{name:"Veg Fried Rice",half:59,full:109,img:"images/rice.jpg"},
+{name:"Classic Spicy Veg Fried Rice",half:69,full:119,img:"images/rice.jpg"},
+{name:"Veg Schezwan Fried Rice",half:79,full:149,img:"images/rice.jpg"},
 
 {category:"Drinks"},
-{name:"Cold Coffee",price:59}
+{name:"Cold Coffee",price:59,img:"images/coffee.jpg"}
 
 ];
 
@@ -229,21 +208,24 @@ if(!item.name.toLowerCase().includes(search)) return;
 
 let price=item.price?`₹${item.price}`:`₹${item.half}/₹${item.full}`;
 let qty=0;
-
 for(let k in cart){
 if(k.startsWith(i+"_")||k==i) qty+=cart[k];
 }
 
 html+=`
 <div class="card">
-${item.img ? `<img src="${item.img}" class="food-img">` : ""}
+<img src="${item.img}">
+<div class="card-info">
 <div class="rating">⭐ 4.${Math.floor(Math.random()*5)+1}</div>
 <h4>${item.name}</h4>
 <div class="price">${price}</div>
+
 ${qty==0
 ? `<button onclick="add(${i})">Add</button>`
 : `<button onclick="removeItem(${i})">-</button> ${qty} <button onclick="add(${i})">+</button>`
 }
+
+</div>
 </div>`;
 });
 
@@ -295,9 +277,6 @@ popup.style.display="flex";
 function order(){
 let name=document.getElementById("name").value;
 let phone=document.getElementById("phone").value;
-let address=document.getElementById("address").value;
-let payment=document.getElementById("payment").value;
-let ordertype=document.getElementById("ordertype").value;
 
 if(!name||!phone) return alert("Fill details");
 
@@ -310,7 +289,7 @@ let price=item.price||(type=="Half"?item.half:item.full);
 msg+=`${item.name}${type?` (${type})`:''} x${cart[k]} = ₹${price*cart[k]}%0A`;
 }
 
-msg+=`%0ATotal ₹${total.innerText}%0A${name}%0A${phone}%0A${address}%0A${payment}%0A${ordertype}`;
+msg+=`%0ATotal ₹${total.innerText}%0A${name}%0A${phone}`;
 
 window.open(`https://wa.me/918506996505?text=${msg}`, "_blank");
 }
