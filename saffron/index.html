@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Saffron Food</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#000000">
+
+<style>
+body{margin:0;font-family:Poppins;background:#0f0f0f;color:white;}
+
+.header{
+display:flex;
+align-items:center;
+gap:12px;
+padding:14px;
+
+background:linear-gradient(135deg,#ff7e5f,#feb47b); /* premium gradient */
+color:white;
+
+position:sticky;
+top:0;
+z-index:1000;
+
+box-shadow:0 4px 15px rgba(0,0,0,0.3);
+}
+
+.header img{
+width:45px;
+border-radius:50%;
+border:2px solid white;
+}
+
+.header h2{
+margin:0;
+font-size:18px;
+font-weight:600;
+}
+
+.header p{
+margin:0;
+font-size:12px;
+opacity:0.9;
+}
+
+.header img{width:45px;border-radius:50%;}
+.header h2{margin:0;}
+.header p{margin:0;font-size:12px;color:gray;}
+
+.search{padding:10px;}
+.search input{width:100%;padding:10px;border-radius:6px;border:none;}
+
+.menu{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+gap:10px;padding:10px;padding-bottom:80px;
+}
+
+.card{background:#1c1c1c;padding:10px;border-radius:10px;}
+
+.price{color:gold;margin:5px 0;}
+
+.rating{font-size:12px;color:#00ff9d;}
+
+button{background:gold;border:none;padding:5px 8px;border-radius:5px;}
+
+.summary{
+position:fixed;bottom:0;width:100%;
+background:#111;padding:10px;display:flex;justify-content:space-between;
+}
+
+.popup{
+position:fixed;top:0;left:0;width:100%;height:100%;
+background:#0009;display:none;justify-content:center;align-items:center;
+}
+
+.popup-box{
+background:white;
+color:black;
+padding:12px;
+border-radius:14px;
+
+width:auto;
+max-width:220px;   /* chhota size */
+margin:auto;
+
+display:flex;
+flex-direction:column;
+gap:10px;
+
+box-shadow:0 10px 25px rgba(0,0,0,0.3);
+}
+
+/* HALF FULL SMALL PREMIUM */
+.hf-box{
+display:flex;
+justify-content:center;
+gap:10px;
+}
+
+.card-content{
+display:flex;
+align-items:center;
+gap:6px;
+padding:6px 10px;
+
+background:#fff;
+color:#000;
+
+border-radius:12px;
+box-shadow:0 4px 10px rgba(0,0,0,0.15);
+
+font-size:12px;
+font-weight:500;
+
+transition:0.2s;
+}
+
+/* small circular image */
+.card-content img{
+width:24px;
+height:24px;
+border-radius:50%;
+object-fit:cover;
+}
+
+/* hover */
+.card-content:hover{
+transform:scale(1.05);
+}
+
+/* selected */
+input:checked + .card-content{
+border:2px solid gold;
+box-shadow:0 4px 12px rgba(255,215,0,0.3);
+}
+
+h2{grid-column:1/-1;color:gold;}
+</style>
+</head>
+
+<body>
+
+<header class="header">
+<img src="https://cdn-icons-png.flaticon.com/512/1046/1046784.png">
+<div>
+<h2>Saffron Food</h2>
+<p>Fast Delivery • Fresh Food</p>
+</div>
+</header>
+
+<div class="search">
+<input id="search" placeholder="Search food..." oninput="render()">
+</div>
+
+<div id="menu" class="menu"></div>
+
+<div class="summary">
+Total ₹<span id="total">0</span>
+<button onclick="openPopup()">Order</button>
+</div>
+
+<!-- POPUP -->
+<div id="popup" class="popup">
+<div class="popup-box">
+
+<input id="name" placeholder="Name">
+<input id="phone" placeholder="Phone">
+<input id="address" placeholder="Address">
+
+<select id="payment">
+<option>Cash</option>
+<option>Online</option>
+</select>
+
+<select id="ordertype">
+<option>Dining</option>
+<option>Take Away</option>
+</select>
+
+<button onclick="order()">Confirm</button>
+
+</div>
+</div>
+
+<!-- HALF FULL -->
+<div id="hfPopup" class="popup">
+<div class="popup-box">
+<button onclick="selectHF('Half')">Half</button>
+<button onclick="selectHF('Full')">Full</button>
+</div>
+</div>
+
+<script>
+
+let items = [
+
+{category:"Burgers"},
+{name:"Aloo tikki burger",price:39},
+{name:"Classic veg burger",price:49},
+{name:"Veg cheese burger",price:59},
+{name:"Double patty veg burger",price:79},
+{name:"Saffron Burger",price:99},
+
+{category:"Snacks"},
+{name:"French fries",half:45,full:79},
+{name:"Chilli potato",half:59,full:109},
+{name:"Honey chilli potato",half:69,full:119},
+
+{category:"Noodles"},
+{name:"Plain Veg Noodles",half:59,full:109},
+{name:"Veg Hakka Noodles",half:69,full:119},
+{name:"Veg Schezwan Noodles",half:79,full:139},
+{name:"Veg Chilli Garlic Noodles",half:89,full:159},
+
+{category:"Sandwiches"},
+{name:"Aloo Grilled Sandwich",price:49},
+{name:"Veg Grilled Sandwich",price:69},
+{name:"Veg Cheese Grilled Sandwich",price:79},
+{name:"Cheese Corn Grilled Sandwich",price:89},
+{name:"Paneer & Cheese Grilled Sandwich",price:99},
+
+{category:"Pasta"},
+{name:"Veg Red Sauce Pasta",price:59},
+{name:"Veg White Sauce Pasta",price:69},
+
+{category:"Momos"},
+{name:"Veg Momos Steam",half:39,full:69},
+{name:"Veg Momos Fried",half:49,full:79},
+{name:"Paneer Momos Steam",half:49,full:89},
+{name:"Paneer Momos Fried",half:69,full:119},
+
+{category:"Paratha"},
+{name:"Aloo Paratha",price:49},
+{name:"Aloo Pyaz Paratha",price:59},
+{name:"Gobhi Paratha",price:69},
+{name:"Paneer Paratha",price:79},
+{name:"Plain Curd",price:20},
+{name:"Boondi Raita",price:39},
+{name:"Sweet Lassi",price:49},
+
+{category:"Maggi"},
+{name:"Plain Maggi",price:39},
+{name:"Veg Maggi",price:49},
+
+{category:"Rice"},
+{name:"Veg Fried Rice",half:59,full:109},
+{name:"Classic Spicy Veg Fried Rice",half:69,full:119},
+{name:"Veg Schezwan Fried Rice",half:79,full:149},
+
+{category:"Drinks"},
+{name:"Cold Coffee",price:59}
+
+];
+
+let cart={},currentItem=null;
+
+function render(){
+let html="";
+let search=document.getElementById("search").value.toLowerCase();
+
+items.forEach((item,i)=>{
+if(item.category){html+=`<h2>${item.category}</h2>`;return;}
+if(!item.name.toLowerCase().includes(search)) return;
+
+let price=item.price?`₹${item.price}`:`₹${item.half}/₹${item.full}`;
+let qty=0;
+for(let k in cart){
+if(k.startsWith(i+"_")||k==i) qty+=cart[k];
+}
+
+html+=`
+<div class="card">
+<div class="rating">⭐ 4.${Math.floor(Math.random()*5)+1}</div>
+<h4>${item.name}</h4>
+<div class="price">${price}</div>
+${qty==0
+? `<button onclick="add(${i})">Add</button>`
+: `<button onclick="removeItem(${i})">-</button> ${qty} <button onclick="add(${i})">+</button>`
+}
+</div>`;
+});
+
+menu.innerHTML=html;
+updateTotal();
+}
+
+function add(i){
+let item=items[i];
+if(item.half){currentItem=i;hfPopup.style.display="flex";return;}
+cart[i]=(cart[i]||0)+1;
+render();
+}
+
+function selectHF(type){
+let key=currentItem+"_"+type;
+cart[key]=(cart[key]||0)+1;
+hfPopup.style.display="none";
+render();
+}
+
+function removeItem(i){
+for(let k in cart){
+if(k.startsWith(i)){
+cart[k]--;
+if(cart[k]<=0) delete cart[k];
+break;
+}
+}
+render();
+}
+
+function updateTotal(){
+let t=0;
+for(let k in cart){
+let [i,type]=k.split("_");
+let item=items[i];
+let price=item.price||(type=="Half"?item.half:item.full);
+t+=price*cart[k];
+}
+total.innerText=t;
+}
+
+function openPopup(){
+if(Object.keys(cart).length==0) return alert("Add items first");
+popup.style.display="flex";
+}
+
+function order(){
+let name=document.getElementById("name").value;
+let phone=document.getElementById("phone").value;
+let address=document.getElementById("address").value;
+let payment=document.getElementById("payment").value;
+let ordertype=document.getElementById("ordertype").value;
+
+if(!name||!phone) return alert("Fill details");
+
+let msg="🍔 Saffron Food Order%0A%0A";
+
+for(let k in cart){
+let [i,type]=k.split("_");
+let item=items[i];
+let price=item.price||(type=="Half"?item.half:item.full);
+msg+=`${item.name}${type?` (${type})`:''} x${cart[k]} = ₹${price*cart[k]}%0A`;
+}
+
+msg+=`%0ATotal ₹${total.innerText}%0A${name}%0A${phone}%0A${address}%0A${payment}%0A${ordertype}`;
+
+window.open(`https://wa.me/918506996505?text=${msg}`, "_blank");
+}
+
+render();
+
+</script>
+
+</body>
+</html>
