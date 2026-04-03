@@ -16,14 +16,11 @@ display:flex;
 align-items:center;
 gap:12px;
 padding:14px;
-
-background:linear-gradient(135deg,#ff7e5f,#feb47b); /* premium gradient */
+background:linear-gradient(135deg,#ff7e5f,#feb47b);
 color:white;
-
 position:sticky;
 top:0;
 z-index:1000;
-
 box-shadow:0 4px 15px rgba(0,0,0,0.3);
 }
 
@@ -33,21 +30,8 @@ border-radius:50%;
 border:2px solid white;
 }
 
-.header h2{
-margin:0;
-font-size:18px;
-font-weight:600;
-}
-
-.header p{
-margin:0;
-font-size:12px;
-opacity:0.9;
-}
-
-.header img{width:45px;border-radius:50%;}
-.header h2{margin:0;}
-.header p{margin:0;font-size:12px;color:gray;}
+.header h2{margin:0;font-size:18px;font-weight:600;}
+.header p{margin:0;font-size:12px;opacity:0.9;}
 
 .search{padding:10px;}
 .search input{width:100%;padding:10px;border-radius:6px;border:none;}
@@ -55,25 +39,56 @@ opacity:0.9;
 .menu{
 display:grid;
 grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
-gap:10px;padding:10px;padding-bottom:80px;
+gap:10px;
+padding:10px;
+padding-bottom:80px;
 }
 
-.card{background:#1c1c1c;padding:10px;border-radius:10px;}
+.card{
+background:#1c1c1c;
+padding:10px;
+border-radius:10px;
+}
+
+/* ✅ IMAGE CSS */
+.food-img{
+width:100%;
+height:120px;
+object-fit:cover;
+border-radius:10px;
+margin-bottom:8px;
+}
 
 .price{color:gold;margin:5px 0;}
-
 .rating{font-size:12px;color:#00ff9d;}
 
-button{background:gold;border:none;padding:5px 8px;border-radius:5px;}
+button{
+background:gold;
+border:none;
+padding:5px 8px;
+border-radius:5px;
+}
 
 .summary{
-position:fixed;bottom:0;width:100%;
-background:#111;padding:10px;display:flex;justify-content:space-between;
+position:fixed;
+bottom:0;
+width:100%;
+background:#111;
+padding:10px;
+display:flex;
+justify-content:space-between;
 }
 
 .popup{
-position:fixed;top:0;left:0;width:100%;height:100%;
-background:#0009;display:none;justify-content:center;align-items:center;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:#0009;
+display:none;
+justify-content:center;
+align-items:center;
 }
 
 .popup-box{
@@ -81,60 +96,11 @@ background:white;
 color:black;
 padding:12px;
 border-radius:14px;
-
-width:auto;
-max-width:220px;   /* chhota size */
-margin:auto;
-
+max-width:220px;
 display:flex;
 flex-direction:column;
 gap:10px;
-
 box-shadow:0 10px 25px rgba(0,0,0,0.3);
-}
-
-/* HALF FULL SMALL PREMIUM */
-.hf-box{
-display:flex;
-justify-content:center;
-gap:10px;
-}
-
-.card-content{
-display:flex;
-align-items:center;
-gap:6px;
-padding:6px 10px;
-
-background:#fff;
-color:#000;
-
-border-radius:12px;
-box-shadow:0 4px 10px rgba(0,0,0,0.15);
-
-font-size:12px;
-font-weight:500;
-
-transition:0.2s;
-}
-
-/* small circular image */
-.card-content img{
-width:24px;
-height:24px;
-border-radius:50%;
-object-fit:cover;
-}
-
-/* hover */
-.card-content:hover{
-transform:scale(1.05);
-}
-
-/* selected */
-input:checked + .card-content{
-border:2px solid gold;
-box-shadow:0 4px 12px rgba(255,215,0,0.3);
 }
 
 h2{grid-column:1/-1;color:gold;}
@@ -162,10 +128,8 @@ Total ₹<span id="total">0</span>
 <button onclick="openPopup()">Order</button>
 </div>
 
-<!-- POPUP -->
 <div id="popup" class="popup">
 <div class="popup-box">
-
 <input id="name" placeholder="Name">
 <input id="phone" placeholder="Phone">
 <input id="address" placeholder="Address">
@@ -181,11 +145,9 @@ Total ₹<span id="total">0</span>
 </select>
 
 <button onclick="order()">Confirm</button>
-
 </div>
 </div>
 
-<!-- HALF FULL -->
 <div id="hfPopup" class="popup">
 <div class="popup-box">
 <button onclick="selectHF('Half')">Half</button>
@@ -198,9 +160,9 @@ Total ₹<span id="total">0</span>
 let items = [
 
 {category:"Burgers"},
-{name:"Aloo tikki burger",price:39},
-{name:"Classic veg burger",price:49},
-{name:"Veg cheese burger",price:59},
+{name:"Aloo tikki burger", price:39, img:"burger.jpg"},
+{name:"Classic veg burger", price:49, img:"burger.jpg"},
+{name:"Veg cheese burger", price:59, img:"burger.jpg"},
 {name:"Double patty veg burger",price:79},
 {name:"Saffron Burger",price:99},
 
@@ -267,12 +229,14 @@ if(!item.name.toLowerCase().includes(search)) return;
 
 let price=item.price?`₹${item.price}`:`₹${item.half}/₹${item.full}`;
 let qty=0;
+
 for(let k in cart){
 if(k.startsWith(i+"_")||k==i) qty+=cart[k];
 }
 
 html+=`
 <div class="card">
+${item.img ? `<img src="${item.img}" class="food-img">` : ""}
 <div class="rating">⭐ 4.${Math.floor(Math.random()*5)+1}</div>
 <h4>${item.name}</h4>
 <div class="price">${price}</div>
