@@ -51,21 +51,25 @@ object-fit:cover;
 }
 
 .card-info{
-padding:10px;
+padding:8px;
 display:flex;
 flex-direction:column;
-gap:5px;
+gap:3px;
 }
 
-.price{color:gold;}
+h4{margin:2px 0;font-size:14px;}
+
+.price{color:gold;margin:0;}
 .rating{font-size:12px;color:#00ff9d;}
 
 button{
 background:gold;
 border:none;
-padding:5px 8px;
+padding:4px 6px;
 border-radius:5px;
 cursor:pointer;
+margin-top:4px;
+font-size:12px;
 }
 
 .summary{
@@ -141,6 +145,7 @@ Total ₹<span id="total">0</span>
 </select>
 
 <button onclick="order()">Confirm</button>
+<button onclick="popup.style.display='none'">Back</button>
 </div>
 </div>
 
@@ -217,23 +222,32 @@ function render(){
 let html="";
 let search=document.getElementById("search").value.toLowerCase();
 
-items.forEach((item,i)=>{
+// 🔥 SEARCH PRIORITY
+let matched=[], others=[];
+items.forEach((item)=>{
+if(item.category){matched.push(item);return;}
+if(item.name.toLowerCase().includes(search)) matched.push(item);
+else others.push(item);
+});
+
+let finalList=[...matched,...others];
+
+finalList.forEach((item,i)=>{
 
 if(item.category){
 html+=`<h2>${item.category}</h2>`;
 return;
 }
 
-if(!item.name.toLowerCase().includes(search)) return;
+let index = items.findIndex(x=>x.name===item.name);
 
 let price=item.price?`₹${item.price}`:`₹${item.half}/₹${item.full}`;
 
 let qty=0;
 for(let k in cart){
-if(k.startsWith(i+"_")||k==i) qty+=cart[k];
+if(k.startsWith(index+"_")||k==index) qty+=cart[k];
 }
 
-// 🔥 AUTO IMAGE
 let imgName = item.name.toLowerCase()
 .replace(/ & /g,'-')
 .replace(/ /g,'-');
@@ -252,8 +266,8 @@ html+=`
 <div class="price">${price}</div>
 
 ${qty==0
-? `<button onclick="add(${i})">Add</button>`
-: `<button onclick="removeItem(${i})">-</button> ${qty} <button onclick="add(${i})">+</button>`
+? `<button onclick="add(${index})">Add</button>`
+: `<button onclick="removeItem(${index})">-</button> ${qty} <button onclick="add(${index})">+</button>`
 }
 
 </div>
@@ -302,27 +316,48 @@ total.innerText=t;
 
 function openPopup(){
 if(Object.keys(cart).length==0) return alert("Add items first");
+
+document.getElementById("name").value="";
+document.getElementById("phone").value="";
+document.getElementById("address").value="";
+
 popup.style.display="flex";
 }
 
 function order(){
 let name=document.getElementById("name").value;
 let phone=document.getElementById("phone").value;
+let address=document.getElementById("address").value;
+let payment=document.getElementById("payment").value;
+let ordertype=document.getElementById("ordertype").value;
 
 if(!name||!phone) return alert("Fill details");
 
-let msg="🍔 Saffron Food Order%0A%0A";
+let msg="🍔 *Saffron Food Order*%0A%0A";
 
 for(let k in cart){
 let [i,type]=k.split("_");
 let item=items[i];
 let price=item.price||(type=="Half"?item.half:item.full);
-msg+=`${item.name}${type?` (${type})`:''} x${cart[k]} = ₹${price*cart[k]}%0A`;
+
+msg+=`• ${item.name}${type?` (${type})`:''} x${cart[k]} = ₹${price*cart[k]}%0A`;
 }
 
-msg+=`%0ATotal ₹${total.innerText}%0A${name}%0A${phone}`;
+msg+=`%0A💰 Total: ₹${total.innerText}`;
+msg+=`%0A👤 Name: ${name}`;
+msg+=`%0A📞 Phone: ${phone}`;
+msg+=`%0A📍 Address: ${address}`;
+msg+=`%0A💳 Payment: ${payment}`;
+msg+=`%0A🍽 Order Type: ${ordertype}`;
 
 window.open(`https://wa.me/918506996505?text=${msg}`, "_blank");
+}
+
+// close popup outside click
+window.onclick=function(e){
+if(e.target==popup){
+popup.style.display="none";
+}
 }
 
 render();
@@ -331,4 +366,3 @@ render();
 
 </body>
 </html>
-
