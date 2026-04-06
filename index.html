@@ -4,16 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Saffron Food</title>
+
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
 <style>
 body{margin:0;font-family:Poppins;background:#0f0f0f;color:white;}
 
 .header{
-display:flex;
-align-items:center;
-gap:12px;
-padding:14px;
+display:flex;align-items:center;gap:12px;padding:14px;
 background:linear-gradient(135deg,#ff7e5f,#feb47b);
 position:sticky;top:0;z-index:1000;
 box-shadow:0 4px 15px rgba(0,0,0,0.3);
@@ -29,78 +28,35 @@ box-shadow:0 4px 15px rgba(0,0,0,0.3);
 .menu{
 display:grid;
 grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
-gap:10px;
-padding:10px;
-padding-bottom:80px;
+gap:10px;padding:10px;padding-bottom:80px;
 }
 
-.card{
-background:#1c1c1c;
-border-radius:12px;
-overflow:hidden;
-transition:0.2s;
-}
+.card{background:#1c1c1c;border-radius:12px;overflow:hidden;}
+.card img{width:100%;height:120px;object-fit:cover;}
 
-.card:hover{
-transform:scale(1.03);
-}
-
-.card img{
-width:100%;
-height:120px;
-object-fit:cover;
-}
-
-.card-info{
-padding:8px;
-display:flex;
-flex-direction:column;
-gap:3px;
-}
-
+.card-info{padding:8px;display:flex;flex-direction:column;gap:3px;}
 h4{margin:2px 0;font-size:14px;}
-
 .price{color:gold;margin:0;}
 .rating{font-size:12px;color:#00ff9d;}
 
 button{
-background:gold;
-border:none;
-padding:4px 6px;
-border-radius:5px;
-cursor:pointer;
-margin-top:4px;
-font-size:12px;
+background:gold;border:none;padding:4px 6px;
+border-radius:5px;cursor:pointer;margin-top:4px;font-size:12px;
 }
 
 .summary{
-position:fixed;
-bottom:0;
-width:100%;
-background:#111;
-padding:10px;
-display:flex;
-justify-content:space-between;
+position:fixed;bottom:0;width:100%;
+background:#111;padding:10px;display:flex;justify-content:space-between;
 }
 
 .popup{
-position:fixed;
-top:0;left:0;width:100%;height:100%;
-background:#0009;
-display:none;
-justify-content:center;
-align-items:center;
+position:fixed;top:0;left:0;width:100%;height:100%;
+background:#0009;display:none;justify-content:center;align-items:center;
 }
 
 .popup-box{
-background:white;
-color:black;
-padding:12px;
-border-radius:14px;
-max-width:220px;
-display:flex;
-flex-direction:column;
-gap:10px;
+background:white;color:black;padding:12px;border-radius:14px;
+max-width:220px;display:flex;flex-direction:column;gap:10px;
 }
 
 h2{grid-column:1/-1;color:gold;}
@@ -128,7 +84,7 @@ Total ₹<span id="total">0</span>
 <button onclick="openPopup()">Order</button>
 </div>
 
-<!-- ORDER POPUP -->
+<!-- POPUP -->
 <div id="popup" class="popup">
 <div class="popup-box">
 <input id="name" placeholder="Name">
@@ -159,74 +115,39 @@ Total ₹<span id="total">0</span>
 </div>
 
 <script>
+
+// 🔥 FIREBASE
 const firebaseConfig = {
   apiKey: "AIzaSyBFjbldIGEJAuyEwZaaxx7eg6Wf0tbahzU",
   authDomain: "saffronfood-44c04.firebaseapp.com",
   projectId: "saffronfood-44c04",
   storageBucket: "saffronfood-44c04.firebasestorage.app",
   messagingSenderId: "206462166451",
-  appId: "1:206462166451:web:7cccd054aec21e0ade97c6",
-  measurementId: "G-F4DZ721J0B"
+  appId: "1:206462166451:web:7cccd054aec21e0ade97c6"
 };
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-let items = [
 
-{category:"Burgers"},
-{name:"Aloo tikki burger",price:39},
-{name:"Classic veg burger",price:49},
-{name:"Veg cheese burger",price:59},
-{name:"Double patty veg burger",price:79},
-{name:"Saffron Burger",price:99},
+// 🔥 ITEMS FROM FIREBASE
+let items = [];
 
-{category:"Snacks"},
-{name:"French fries",half:45,full:79},
-{name:"Chilli potato",half:59,full:109},
-{name:"Honey chilli potato",half:69,full:119},
+db.collection("items").onSnapshot((snapshot)=>{
+items = [];
 
-{category:"Noodles"},
-{name:"Plain Veg Noodles",half:59,full:109},
-{name:"Veg Hakka Noodles",half:69,full:119},
-{name:"Veg Schezwan Noodles",half:79,full:139},
-{name:"Veg Chilli Garlic Noodles",half:89,full:159},
+snapshot.forEach(doc=>{
+let d = doc.data();
 
-{category:"Sandwiches"},
-{name:"Aloo Grilled Sandwich",price:49},
-{name:"Veg Grilled Sandwich",price:69},
-{name:"Veg Cheese Grilled Sandwich",price:79},
-{name:"Cheese Corn Grilled Sandwich",price:89},
-{name:"Paneer Cheese Grilled Sandwich",price:99},
+items.push({
+name: d.name,
+price: d.price,
+sold: d.sold,
+img: "image/" + d.img
+});
+});
 
-{category:"Pasta"},
-{name:"Veg Red Sauce Pasta",price:59},
-{name:"Veg White Sauce Pasta",price:69},
-
-{category:"Momos"},
-{name:"Veg Momos Steam",half:39,full:69},
-{name:"Veg Momos Fried",half:49,full:79},
-{name:"Paneer Momos Steam",half:49,full:89},
-{name:"Paneer Momos Fried",half:69,full:119},
-
-{category:"Paratha"},
-{name:"Aloo Paratha",price:49},
-{name:"Aloo Pyaz Paratha",price:59},
-{name:"Gobhi Paratha",price:69},
-{name:"Paneer Paratha",price:79},
-
-{category:"Maggi"},
-{name:"Plain Maggi",price:39},
-{name:"Veg Maggi",price:49},
-
-{category:"Rice"},
-{name:"Veg Fried Rice",half:59,full:109},
-{name:"Classic Spicy Veg Fried Rice",half:69,full:119},
-{name:"Veg Schezwan Fried Rice",half:79,full:149},
-
-{category:"Drinks"},
-{name:"Cold Coffee",price:59}
-
-];
+render();
+});
 
 let cart={},currentItem=null;
 
@@ -234,40 +155,27 @@ function render(){
 let html="";
 let search=document.getElementById("search").value.toLowerCase();
 
-// 🔥 SEARCH PRIORITY
+// search priority
 let matched=[], others=[];
-items.forEach((item)=>{
-if(item.category){matched.push(item);return;}
+items.forEach(item=>{
 if(item.name.toLowerCase().includes(search)) matched.push(item);
 else others.push(item);
 });
-
 let finalList=[...matched,...others];
 
 finalList.forEach((item,i)=>{
 
-if(item.category){
-html+=`<h2>${item.category}</h2>`;
-return;
-}
-
-let index = items.findIndex(x=>x.name===item.name);
-
-let price=item.price?`₹${item.price}`:`₹${item.half}/₹${item.full}`;
+let price=`₹${item.price}`;
 
 let qty=0;
 for(let k in cart){
-if(k.startsWith(index+"_")||k==index) qty+=cart[k];
+if(k==i) qty+=cart[k];
 }
-
-let imgName = item.name.toLowerCase()
-.replace(/ & /g,'-')
-.replace(/ /g,'-');
 
 html+=`
 <div class="card">
 
-<img src="image/${imgName}.jpg">
+<img src="${item.img}">
 
 <div class="card-info">
 
@@ -277,9 +185,11 @@ html+=`
 
 <div class="price">${price}</div>
 
-${qty==0
-? `<button onclick="add(${index})">Add</button>`
-: `<button onclick="removeItem(${index})">-</button> ${qty} <button onclick="add(${index})">+</button>`
+${item.sold
+? `<button disabled style="background:red;color:white;">Sold Out</button>`
+: qty==0
+? `<button onclick="add(${i})">Add</button>`
+: `<button onclick="removeItem(${i})">-</button> ${qty} <button onclick="add(${i})">+</button>`
 }
 
 </div>
@@ -291,37 +201,20 @@ updateTotal();
 }
 
 function add(i){
-let item=items[i];
-if(item.half){currentItem=i;hfPopup.style.display="flex";return;}
 cart[i]=(cart[i]||0)+1;
 render();
 }
 
-function selectHF(type){
-let key=currentItem+"_"+type;
-cart[key]=(cart[key]||0)+1;
-hfPopup.style.display="none";
-render();
-}
-
 function removeItem(i){
-for(let k in cart){
-if(k.startsWith(i)){
-cart[k]--;
-if(cart[k]<=0) delete cart[k];
-break;
-}
-}
+cart[i]--;
+if(cart[i]<=0) delete cart[i];
 render();
 }
 
 function updateTotal(){
 let t=0;
-for(let k in cart){
-let [i,type]=k.split("_");
-let item=items[i];
-let price=item.price||(type=="Half"?item.half:item.full);
-t+=price*cart[k];
+for(let i in cart){
+t+=items[i].price*cart[i];
 }
 total.innerText=t;
 }
@@ -337,22 +230,19 @@ popup.style.display="flex";
 }
 
 function order(){
-let name=document.getElementById("name").value;
-let phone=document.getElementById("phone").value;
-let address=document.getElementById("address").value;
-let payment=document.getElementById("payment").value;
-let ordertype=document.getElementById("ordertype").value;
+let name=nameInput.value;
+let phone=phoneInput.value;
+let address=addressInput.value;
+let payment=payment.value;
+let ordertype=ordertype.value;
 
 if(!name||!phone) return alert("Fill details");
 
 let msg="🍔 *Saffron Food Order*%0A%0A";
 
-for(let k in cart){
-let [i,type]=k.split("_");
+for(let i in cart){
 let item=items[i];
-let price=item.price||(type=="Half"?item.half:item.full);
-
-msg+=`• ${item.name}${type?` (${type})`:''} x${cart[k]} = ₹${price*cart[k]}%0A`;
+msg+=`• ${item.name} x${cart[i]} = ₹${item.price*cart[i]}%0A`;
 }
 
 msg+=`%0A💰 Total: ₹${total.innerText}`;
@@ -362,17 +252,12 @@ msg+=`%0A📍 Address: ${address}`;
 msg+=`%0A💳 Payment: ${payment}`;
 msg+=`%0A🍽 Order Type: ${ordertype}`;
 
-window.open(`https://wa.me/918506996505?text=${msg}`, "_blank");
+window.open(`https://wa.me/918506996505?text=${msg}`);
 }
 
-// close popup outside click
 window.onclick=function(e){
-if(e.target==popup){
-popup.style.display="none";
+if(e.target==popup) popup.style.display="none";
 }
-}
-
-render();
 
 </script>
 
