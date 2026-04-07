@@ -230,11 +230,11 @@ popup.style.display="flex";
 }
 
 function order(){
-let name=nameInput.value;
-let phone=phoneInput.value;
-let address=addressInput.value;
-let payment=payment.value;
-let ordertype=ordertype.value;
+let name = document.getElementById("name").value;
+let phone = document.getElementById("phone").value;
+let address = document.getElementById("address").value;
+let payment = document.getElementById("payment").value;
+let ordertype = document.getElementById("ordertype").value;
 
 if(!name||!phone) return alert("Fill details");
 
