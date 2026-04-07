@@ -106,14 +106,6 @@ Total ₹<span id="total">0</span>
 </div>
 </div>
 
-<!-- HALF FULL -->
-<div id="hfPopup" class="popup">
-<div class="popup-box">
-<button onclick="selectHF('Half')">Half</button>
-<button onclick="selectHF('Full')">Full</button>
-</div>
-</div>
-
 <script>
 
 // 🔥 FIREBASE
@@ -129,7 +121,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// 🔥 ITEMS FROM FIREBASE
+// 🔥 LOAD ITEMS
 let items = [];
 
 db.collection("items").get().then((snapshot)=>{
@@ -150,54 +142,33 @@ console.log("Items Loaded:", items);
 render();
 });
 
-snapshot.forEach(doc=>{
-let d = doc.data();
+let cart={};
 
-items.push({
-name: d.name,
-price: d.price,
-sold: d.sold,
-img: "image/" + d.img
-});
-});
-
-render();
-});
-
-let cart={},currentItem=null;
-
+// 🔥 RENDER
 function render(){
 let html="";
 let search=document.getElementById("search").value.toLowerCase();
 
-// search priority
 let matched=[], others=[];
 items.forEach(item=>{
 if(item.name.toLowerCase().includes(search)) matched.push(item);
 else others.push(item);
 });
+
 let finalList=[...matched,...others];
 
 finalList.forEach((item,i)=>{
 
 let price=`₹${item.price}`;
 
-let qty=0;
-for(let k in cart){
-if(k==i) qty+=cart[k];
-}
+let qty=cart[i]||0;
 
 html+=`
 <div class="card">
-
 <img src="${item.img}">
-
 <div class="card-info">
-
 <div class="rating">⭐ 4.${Math.floor(Math.random()*5)+1}</div>
-
 <h4>${item.name}</h4>
-
 <div class="price">${price}</div>
 
 ${item.sold
@@ -215,6 +186,7 @@ menu.innerHTML=html;
 updateTotal();
 }
 
+// 🔥 CART
 function add(i){
 cart[i]=(cart[i]||0)+1;
 render();
@@ -234,6 +206,7 @@ t+=items[i].price*cart[i];
 total.innerText=t;
 }
 
+// 🔥 POPUP
 function openPopup(){
 if(Object.keys(cart).length==0) return alert("Add items first");
 
@@ -244,6 +217,7 @@ document.getElementById("address").value="";
 popup.style.display="flex";
 }
 
+// 🔥 ORDER
 function order(){
 let name = document.getElementById("name").value;
 let phone = document.getElementById("phone").value;
@@ -270,6 +244,7 @@ msg+=`%0A🍽 Order Type: ${ordertype}`;
 window.open(`https://wa.me/918506996505?text=${msg}`);
 }
 
+// close popup outside click
 window.onclick=function(e){
 if(e.target==popup) popup.style.display="none";
 }
