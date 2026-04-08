@@ -124,7 +124,7 @@ const db = firebase.firestore();
 // 🔥 LOAD ITEMS
 let items = [];
 
-db.collection("items").onSnapshot((snapshot)=>{
+db.collection("items").get().then((snapshot)=>{
 items = [];
 
 snapshot.forEach(doc=>{
