@@ -67,7 +67,7 @@ let items = [];
 let cart = {};
 
 // ✅ LOAD DATA
-db.collection("items").onSnapshot((snapshot)=>{
+db.collection("items").get().then((snapshot)=>{
   console.log("Snapshot size:", snapshot.size);
 
   items = [];
