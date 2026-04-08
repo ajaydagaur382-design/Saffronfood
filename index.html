@@ -67,7 +67,12 @@ let items = [];
 let cart = {};
 
 // ✅ LOAD DATA
-db.collection("items").get().then((snapshot)=>{
+items = [
+  {name:"Burger", price:120, sold:false, img:"https://ajaydagaur382-design.github.io/Saffronfood/image/veg-cheese-burger.jpg"},
+  {name:"Pizza", price:200, sold:false, img:"https://ajaydagaur382-design.github.io/Saffronfood/image/veg-cheese-burger.jpg"}
+];
+
+render();
   console.log("Snapshot size:", snapshot.size);
 
   items = [];
