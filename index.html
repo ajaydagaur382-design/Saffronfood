@@ -10,56 +10,17 @@
 
 <style>
 body{margin:0;font-family:Poppins;background:#0f0f0f;color:white;}
-
-.header{
-display:flex;align-items:center;gap:12px;padding:14px;
-background:linear-gradient(135deg,#ff7e5f,#feb47b);
-position:sticky;top:0;z-index:1000;
-box-shadow:0 4px 15px rgba(0,0,0,0.3);
-}
-
+.header{display:flex;align-items:center;gap:12px;padding:14px;background:linear-gradient(135deg,#ff7e5f,#feb47b);position:sticky;top:0;}
 .header img{width:45px;border-radius:50%;border:2px solid white;}
-.header h2{margin:0;font-size:18px;}
-.header p{margin:0;font-size:12px;}
-
 .search{padding:10px;}
 .search input{width:100%;padding:10px;border-radius:6px;border:none;}
-
-.menu{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
-gap:10px;padding:10px;padding-bottom:80px;
-}
-
+.menu{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;padding:10px;padding-bottom:80px;}
 .card{background:#1c1c1c;border-radius:12px;overflow:hidden;}
 .card img{width:100%;height:120px;object-fit:cover;}
-
-.card-info{padding:8px;display:flex;flex-direction:column;gap:3px;}
-h4{margin:2px 0;font-size:14px;}
-.price{color:gold;margin:0;}
-.rating{font-size:12px;color:#00ff9d;}
-
-button{
-background:gold;border:none;padding:4px 6px;
-border-radius:5px;cursor:pointer;margin-top:4px;font-size:12px;
-}
-
-.summary{
-position:fixed;bottom:0;width:100%;
-background:#111;padding:10px;display:flex;justify-content:space-between;
-}
-
-.popup{
-position:fixed;top:0;left:0;width:100%;height:100%;
-background:#0009;display:none;justify-content:center;align-items:center;
-}
-
-.popup-box{
-background:white;color:black;padding:12px;border-radius:14px;
-max-width:220px;display:flex;flex-direction:column;gap:10px;
-}
-
-h2{grid-column:1/-1;color:gold;}
+.card-info{padding:8px;}
+.price{color:gold;}
+button{background:gold;border:none;padding:4px 6px;border-radius:5px;cursor:pointer;}
+.summary{position:fixed;bottom:0;width:100%;background:#111;padding:10px;display:flex;justify-content:space-between;}
 </style>
 </head>
 
@@ -81,34 +42,11 @@ h2{grid-column:1/-1;color:gold;}
 
 <div class="summary">
 Total ₹<span id="total">0</span>
-<button onclick="openPopup()">Order</button>
-</div>
-
-<!-- POPUP -->
-<div id="popup" class="popup">
-<div class="popup-box">
-<input id="name" placeholder="Name">
-<input id="phone" placeholder="Phone">
-<input id="address" placeholder="Address">
-
-<select id="payment">
-<option>Cash</option>
-<option>Online</option>
-</select>
-
-<select id="ordertype">
-<option>Dining</option>
-<option>Take Away</option>
-</select>
-
-<button onclick="order()">Confirm</button>
-<button onclick="popup.style.display='none'">Back</button>
-</div>
 </div>
 
 <script>
 
-// 🔥 FIREBASE
+// ✅ FIREBASE CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyBFjbldIGEJAuyEwZaaxx7eg6Wf0tbahzU",
   authDomain: "saffronfood-44c04.firebaseapp.com",
@@ -118,139 +56,83 @@ const firebaseConfig = {
   appId: "1:206462166451:web:7cccd054aec21e0ade97c6"
 };
 
-firebase.initializeApp(firebaseConfig);
+// ✅ INIT ONLY ONCE
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// 🔥 LOAD ITEMS
 let items = [];
+let cart = {};
 
+// ✅ LOAD DATA
 db.collection("items").onSnapshot((snapshot)=>{
   console.log("Snapshot size:", snapshot.size);
-items = [];
 
-snapshot.forEach(doc=>{
-let d = doc.data();
+  items = [];
 
-items.push({
-name: d.name,
-price: d.price,
-sold: d.sold,
-img: "./image/" + d.img
+  snapshot.forEach(doc=>{
+    let d = doc.data();
+
+    items.push({
+      name: d.name,
+      price: d.price,
+      sold: d.sold,
+      img: "https://ajaydagaur382-design.github.io/Saffronfood/image/" + d.img
+    });
+  });
+
+  console.log("Items:", items);
+  render();
 });
-});
 
-console.log("Items Loaded:", items);
-render();
-});
-
-let cart={};
-
-// 🔥 RENDER
+// ✅ RENDER
 function render(){
-console.log("RENDER RUNNING");
-let html="";
-let search=document.getElementById("search").value.toLowerCase();
+  let html="";
+  let search=document.getElementById("search").value.toLowerCase();
 
-let matched=[], others=[];
-items.forEach(item=>{
-if(item.name.toLowerCase().includes(search)) matched.push(item);
-else others.push(item);
-});
+  items.forEach((item,i)=>{
+    if(!item.name.toLowerCase().includes(search)) return;
 
-let finalList=[...matched,...others];
+    let qty = cart[i] || 0;
 
-finalList.forEach((item)=>{
-let i = items.indexOf(item);
+    html+=`
+    <div class="card">
+      <img src="${item.img}">
+      <div class="card-info">
+        <h4>${item.name}</h4>
+        <div class="price">₹${item.price}</div>
 
-let price=`₹${item.price}`;
+        ${item.sold
+          ? `<button disabled>Sold Out</button>`
+          : qty==0
+          ? `<button onclick="add(${i})">Add</button>`
+          : `<button onclick="removeItem(${i})">-</button> ${qty} <button onclick="add(${i})">+</button>`
+        }
+      </div>
+    </div>`;
+  });
 
-let qty=cart[i]||0;
-
-html+=`
-<div class="card">
-<img src="${item.img}">
-<div class="card-info">
-<div class="rating">⭐ 4.${Math.floor(Math.random()*5)+1}</div>
-<h4>${item.name}</h4>
-<div class="price">${price}</div>
-
-${item.sold
-? `<button disabled style="background:red;color:white;">Sold Out</button>`
-: qty==0
-? `<button onclick="add(${i})">Add</button>`
-: `<button onclick="removeItem(${i})">-</button> ${qty} <button onclick="add(${i})">+</button>`
+  document.getElementById("menu").innerHTML = html;
+  updateTotal();
 }
 
-</div>
-</div>`;
-});
-
-document.getElementById("menu").innerHTML = html;
-updateTotal();
-}
-
-// 🔥 CART
+// ✅ CART
 function add(i){
-cart[i]=(cart[i]||0)+1;
-render();
+  cart[i]=(cart[i]||0)+1;
+  render();
 }
 
 function removeItem(i){
-cart[i]--;
-if(cart[i]<=0) delete cart[i];
-render();
+  cart[i]--;
+  if(cart[i]<=0) delete cart[i];
+  render();
 }
 
 function updateTotal(){
-let t=0;
-for(let i in cart){
-t+=items[i].price*cart[i];
-}
-document.getElementById("total").innerText = t;
-}
-
-// 🔥 POPUP
-function openPopup(){
-if(Object.keys(cart).length==0) return alert("Add items first");
-
-document.getElementById("name").value="";
-document.getElementById("phone").value="";
-document.getElementById("address").value="";
-
-popup.style.display="flex";
-}
-
-// 🔥 ORDER
-function order(){
-let name = document.getElementById("name").value;
-let phone = document.getElementById("phone").value;
-let address = document.getElementById("address").value;
-let payment = document.getElementById("payment").value;
-let ordertype = document.getElementById("ordertype").value;
-
-if(!name||!phone) return alert("Fill details");
-
-let msg="🍔 *Saffron Food Order*%0A%0A";
-
-for(let i in cart){
-let item=items[i];
-msg+=`• ${item.name} x${cart[i]} = ₹${item.price*cart[i]}%0A`;
-}
-
-msg+=`%0A💰 Total: ₹${total.innerText}`;
-msg+=`%0A👤 Name: ${name}`;
-msg+=`%0A📞 Phone: ${phone}`;
-msg+=`%0A📍 Address: ${address}`;
-msg+=`%0A💳 Payment: ${payment}`;
-msg+=`%0A🍽 Order Type: ${ordertype}`;
-
-window.open(`https://wa.me/918506996505?text=${msg}`);
-}
-
-// close popup outside click
-window.onclick=function(e){
-if(e.target==popup) popup.style.display="none";
+  let t=0;
+  for(let i in cart){
+    t+=items[i].price*cart[i];
+  }
+  document.getElementById("total").innerText = t;
 }
 
 </script>
