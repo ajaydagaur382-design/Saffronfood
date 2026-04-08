@@ -58,6 +58,7 @@ const firebaseConfig = {
 
 // 🔥 INIT
 firebase.initializeApp(firebaseConfig);
+console.log("PROJECT:", firebase.app().options.projectId);
 const db = firebase.firestore();
 
 let items = [];
