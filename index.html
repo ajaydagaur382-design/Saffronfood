@@ -64,7 +64,18 @@ let items = [];
 let cart = {};
 
 // 🔥 LOAD FROM FIRESTORE (FINAL)
+// 🔥 TEST FIRESTORE
 db.collection("items").get().then((snapshot)=>{
+  console.log("SIZE:", snapshot.size);
+
+  if(snapshot.size === 0){
+    alert("❌ Firestore EMPTY hai");
+  }
+
+  snapshot.forEach(doc=>{
+    console.log(doc.data());
+  });
+});
   console.log("SIZE:", snapshot.size);
 
   items = [];
