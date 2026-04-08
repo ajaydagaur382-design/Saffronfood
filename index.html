@@ -157,7 +157,8 @@ else others.push(item);
 
 let finalList=[...matched,...others];
 
-finalList.forEach((item,i)=>{
+finalList.forEach((item)=>{
+let i = items.indexOf(item);
 
 let price=`₹${item.price}`;
 
