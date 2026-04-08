@@ -73,25 +73,7 @@ items = [
 ];
 
 render();
-  console.log("Snapshot size:", snapshot.size);
-
-  items = [];
-
-  snapshot.forEach(doc=>{
-    let d = doc.data();
-
-    items.push({
-      name: d.name,
-      price: d.price,
-      sold: d.sold,
-      img: "https://ajaydagaur382-design.github.io/Saffronfood/image/" + d.img
-    });
-  });
-
-  console.log("Items:", items);
-  render();
-});
-
+  
 // ✅ RENDER
 function render(){
   let html="";
