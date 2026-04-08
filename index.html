@@ -10,8 +10,8 @@
 
 <style>
 body{margin:0;font-family:Poppins;background:#0f0f0f;color:white;}
-.header{display:flex;align-items:center;gap:12px;padding:14px;background:linear-gradient(135deg,#ff7e5f,#feb47b);position:sticky;top:0;}
-.header img{width:45px;border-radius:50%;border:2px solid white;}
+.header{display:flex;align-items:center;gap:12px;padding:14px;background:linear-gradient(135deg,#ff7e5f,#feb47b);}
+.header img{width:45px;border-radius:50%;}
 .search{padding:10px;}
 .search input{width:100%;padding:10px;border-radius:6px;border:none;}
 .menu{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;padding:10px;padding-bottom:80px;}
@@ -19,7 +19,7 @@ body{margin:0;font-family:Poppins;background:#0f0f0f;color:white;}
 .card img{width:100%;height:120px;object-fit:cover;}
 .card-info{padding:8px;}
 .price{color:gold;}
-button{background:gold;border:none;padding:4px 6px;border-radius:5px;cursor:pointer;}
+button{background:gold;border:none;padding:5px;border-radius:5px;cursor:pointer;}
 .summary{position:fixed;bottom:0;width:100%;background:#111;padding:10px;display:flex;justify-content:space-between;}
 </style>
 </head>
@@ -46,35 +46,44 @@ Total ₹<span id="total">0</span>
 
 <script>
 
-// ✅ FIREBASE CONFIG
+// 🔥 FIREBASE CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyBFjbldIGEJAuyEwZaaxx7eg6Wf0tbahzU",
   authDomain: "saffronfood-44c04.firebaseapp.com",
   projectId: "saffronfood-44c04",
-  storageBucket: "saffronfood-44c04.firebasestorage.app",
+  storageBucket: "saffronfood-44c04.appspot.com",
   messagingSenderId: "206462166451",
   appId: "1:206462166451:web:7cccd054aec21e0ade97c6"
 };
 
-// ✅ INIT ONLY ONCE
+// 🔥 INIT
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-db.settings({
-  experimentalForceLongPolling: true
-});
 
 let items = [];
 let cart = {};
 
-// ✅ LOAD DATA
-items = [
-  {name:"Burger", price:120, sold:false, img:"https://ajaydagaur382-design.github.io/Saffronfood/image/veg-cheese-burger.jpg"},
-  {name:"Pizza", price:200, sold:false, img:"https://ajaydagaur382-design.github.io/Saffronfood/image/veg-cheese-burger.jpg"}
-];
+// 🔥 LOAD FROM FIRESTORE (FINAL)
+db.collection("items").get().then((snapshot)=>{
+  console.log("SIZE:", snapshot.size);
 
-render();
-  
-// ✅ RENDER
+  items = [];
+
+  snapshot.forEach(doc=>{
+    let d = doc.data();
+
+    items.push({
+      name: d.name,
+      price: d.price,
+      sold: d.sold,
+      img: "https://ajaydagaur382-design.github.io/Saffronfood/image/" + d.img
+    });
+  });
+
+  render();
+});
+
+// 🔥 RENDER
 function render(){
   let html="";
   let search=document.getElementById("search").value.toLowerCase();
@@ -105,7 +114,7 @@ function render(){
   updateTotal();
 }
 
-// ✅ CART
+// 🔥 CART
 function add(i){
   cart[i]=(cart[i]||0)+1;
   render();
