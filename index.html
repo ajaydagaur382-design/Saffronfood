@@ -59,6 +59,9 @@ const firebaseConfig = {
 // ✅ INIT ONLY ONCE
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+db.settings({
+  experimentalForceLongPolling: true
+});
 
 let items = [];
 let cart = {};
