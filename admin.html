@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Admin Panel PRO</title>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+
+<style>
+body{background:#111;color:white;font-family:sans-serif;padding:20px;}
+input,button{width:100%;padding:10px;margin:5px 0;}
+.card{background:#222;padding:10px;margin-top:10px;border-radius:10px;}
+img{width:60px;height:60px;}
+</style>
+</head>
+
+<body>
+
+<h2>🔥 Admin Panel</h2>
+
+<input id="name" placeholder="Item Name">
+<input id="price" type="number" placeholder="Price">
+<input type="file" id="file">
+<label><input type="checkbox" id="sold"> Sold Out</label>
+
+<button onclick="saveItem()">Save Item</button>
+
+<h3>📦 Items</h3>
+<div id="items"></div>
+
+<h3>🧾 Orders</h3>
+<div id="orders"></div>
+
+<script>
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBftbnp4hW65s5SQNwkizgp_nY4jfk80l4",
+  authDomain: "saffron-new.firebaseapp.com",
+  projectId: "saffron-new",
+  storageBucket: "saffron-new.appspot.com",
+  messagingSenderId: "645716182774",
+  appId: "1:645716182774:web:ff53d375050520698b8ed7"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const db = firebase.firestore();
+const storage = firebase.storage();
+
+db.settings({ experimentalForceLongPolling: true });
+
+let editId = null;
+
+// 🔥 SAVE ITEM WITH IMAGE
+async function saveItem(){
+  let name = nameEl.value;
+  let price = Number(priceEl.value);
+  let file = fileEl.files[0];
+  let sold = soldEl.checked;
+
+  if(!name || !price){
+    alert("Fill fields");
+    return;
+  }
+
+  let imgURL = "";
+
+  if(file){
+    let ref = storage.ref("items/" + file.name);
+    await ref.put(file);
+    imgURL = await ref.getDownloadURL();
+  }
+
+  if(editId){
+    db.collection("items").doc(editId).update({
+      name, price, sold,
+      ...(imgURL && {img: imgURL})
+    });
+    editId = null;
+  }else{
+    db.collection("items").add({
+      name, price, sold, img: imgURL
+    });
+  }
+
+  clearForm();
+}
+
+// 🔥 LOAD ITEMS
+db.collection("items").onSnapshot(snap=>{
+  let html="";
+  snap.forEach(doc=>{
+    let d = doc.data();
+
+    html+=`
+    <div class="card">
+      <img src="${d.img}">
+      <b>${d.name}</b> ₹${d.price}<br>
+      ${d.sold ? "❌ Sold" : "✅ Available"}<br>
+
+      <button onclick="edit('${doc.id}','${d.name}',${d.price},'${d.img}',${d.sold})">Edit</button>
+      <button onclick="del('${doc.id}')">Delete</button>
+    </div>`;
+  });
+  items.innerHTML = html;
+});
+
+// 🔥 DELETE
+function del(id){
+  db.collection("items").doc(id).delete();
+}
+
+// 🔥 EDIT
+function edit(id,name,price,img,sold){
+  nameEl.value=name;
+  priceEl.value=price;
+  soldEl.checked=sold;
+  editId=id;
+}
+
+// 🔥 CLEAR
+function clearForm(){
+  nameEl.value="";
+  priceEl.value="";
+  fileEl.value="";
+  soldEl.checked=false;
+}
+
+// 🔥 LOAD ORDERS
+db.collection("orders").onSnapshot(snap=>{
+  let html="";
+  snap.forEach(doc=>{
+    let o = doc.data();
+
+    html+=`
+    <div class="card">
+      <b>${o.name}</b><br>
+      ${o.phone}<br>
+      ₹${o.total}<br>
+      ${o.items}
+    </div>`;
+  });
+  orders.innerHTML = html;
+});
+
+// DOM shortcut
+const nameEl = document.getElementById("name");
+const priceEl = document.getElementById("price");
+const fileEl = document.getElementById("file");
+const soldEl = document.getElementById("sold");
+
+</script>
+
+</body>
+</html>
