@@ -46,24 +46,21 @@ Total ₹<span id="total">0</span>
 
 <script>
 
-// 🔥 FIREBASE CONFIG
+// ✅ NEW FIREBASE CONFIG (UPDATED)
 const firebaseConfig = {
-  apiKey: "AIzaSyBFjbldIGEJAuyEwZaaxx7eg6Wf0tbahzU",
-  authDomain: "saffronfood-44c04.firebaseapp.com",
-  projectId: "saffronfood-44c04",
-  storageBucket: "saffronfood-44c04.appspot.com",
-  messagingSenderId: "206462166451",
-  appId: "1:206462166451:web:7cccd054aec21e0ade97c6"
+  apiKey: "AIzaSyBftbnp4hW65s5SQNwkizgp_nY4jfk80l4",
+  authDomain: "saffron-new.firebaseapp.com",
+  projectId: "saffron-new",
+  storageBucket: "saffron-new.appspot.com",
+  messagingSenderId: "645716182774",
+  appId: "1:645716182774:web:ff53d375050520698b8ed7"
 };
 
-// 🔥 SAFE INIT
-if (!firebase.apps.length) {
-  firebase.initializeApp(firebaseConfig);
-}
-
+// ✅ INIT
+firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// 🔥 FIX FOR GITHUB PAGES
+// ✅ GITHUB FIX
 db.settings({
   experimentalForceLongPolling: true
 });
@@ -71,14 +68,14 @@ db.settings({
 let items = [];
 let cart = {};
 
-// 🔥 FORCE SERVER FETCH
-db.collection("items").get({ source: "server" })
+// ✅ LOAD DATA FROM NEW PROJECT
+db.collection("items").get()
 .then((snapshot) => {
   console.log("PROJECT:", firebase.app().options.projectId);
-  console.log("SERVER SIZE:", snapshot.size);
+  console.log("SIZE:", snapshot.size);
 
-  if (snapshot.empty) {
-    alert("❌ SERVER se empty aa raha hai");
+  if(snapshot.size === 0){
+    alert("❌ Firestore empty hai (new project me data nahi dala)");
     return;
   }
 
@@ -101,7 +98,7 @@ db.collection("items").get({ source: "server" })
   console.error("ERROR:", err);
 });
 
-// 🔥 RENDER
+// ✅ RENDER
 function render(){
   let html="";
   let search=document.getElementById("search").value.toLowerCase();
@@ -132,7 +129,7 @@ function render(){
   updateTotal();
 }
 
-// 🔥 CART
+// ✅ CART
 function add(i){
   cart[i]=(cart[i]||0)+1;
   render();
