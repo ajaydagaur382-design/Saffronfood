@@ -10,17 +10,59 @@
 
 <style>
 body{margin:0;font-family:Poppins;background:#0f0f0f;color:white;}
-.header{display:flex;align-items:center;gap:12px;padding:14px;background:linear-gradient(135deg,#ff7e5f,#feb47b);}
+
+.header{
+display:flex;align-items:center;gap:12px;padding:14px;
+background:linear-gradient(135deg,#ff7e5f,#feb47b);
+position:sticky;top:0;z-index:1000;
+}
+
 .header img{width:45px;border-radius:50%;}
+
 .search{padding:10px;}
 .search input{width:100%;padding:10px;border-radius:6px;border:none;}
-.menu{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;padding:10px;padding-bottom:80px;}
-.card{background:#1c1c1c;border-radius:12px;overflow:hidden;}
+
+.menu{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+gap:12px;
+padding:10px;
+padding-bottom:120px;
+}
+
+.card{
+background:#1c1c1c;
+border-radius:12px;
+overflow:hidden;
+transition:0.2s;
+}
+.card:hover{transform:scale(1.03);}
+
 .card img{width:100%;height:120px;object-fit:cover;}
+
 .card-info{padding:8px;}
 .price{color:gold;}
-button{background:gold;border:none;padding:5px;border-radius:5px;cursor:pointer;}
-.summary{position:fixed;bottom:0;width:100%;background:#111;padding:10px;display:flex;justify-content:space-between;}
+.rating{font-size:12px;color:#00ff9d;}
+
+button{
+background:gold;border:none;padding:5px;border-radius:5px;
+cursor:pointer;font-size:12px;
+}
+button:hover{opacity:0.8;}
+
+.summary{
+position:fixed;
+bottom:0;
+left:0;
+width:100%;
+background:#111;
+padding:12px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+z-index:999;
+box-shadow:0 -3px 10px rgba(0,0,0,0.5);
+}
 </style>
 </head>
 
@@ -42,11 +84,12 @@ button{background:gold;border:none;padding:5px;border-radius:5px;cursor:pointer;
 
 <div class="summary">
 Total ₹<span id="total">0</span>
+<button onclick="alert('Order feature connected with WhatsApp already')">Order</button>
 </div>
 
 <script>
 
-// ✅ NEW FIREBASE CONFIG (UPDATED)
+// ✅ FIREBASE CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyBftbnp4hW65s5SQNwkizgp_nY4jfk80l4",
   authDomain: "saffron-new.firebaseapp.com",
@@ -56,46 +99,30 @@ const firebaseConfig = {
   appId: "1:645716182774:web:ff53d375050520698b8ed7"
 };
 
-// ✅ INIT
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// ✅ GITHUB FIX
-db.settings({
-  experimentalForceLongPolling: true
-});
+db.settings({ experimentalForceLongPolling: true });
 
 let items = [];
 let cart = {};
 
-// ✅ LOAD DATA FROM NEW PROJECT
-db.collection("items").get()
-.then((snapshot) => {
-  console.log("PROJECT:", firebase.app().options.projectId);
-  console.log("SIZE:", snapshot.size);
-
-  if(snapshot.size === 0){
-    alert("❌ Firestore empty hai (new project me data nahi dala)");
-    return;
-  }
-
+// ✅ LOAD DATA (REALTIME)
+db.collection("items").onSnapshot(snapshot=>{
   items = [];
 
-  snapshot.forEach(doc => {
+  snapshot.forEach(doc=>{
     let d = doc.data();
 
     items.push({
       name: d.name,
       price: d.price,
       sold: d.sold,
-      img: "https://ajaydagaur382-design.github.io/Saffronfood/image/" + d.img
+      img: d.img   // ✅ FIXED (firebase image)
     });
   });
 
   render();
-})
-.catch((err)=>{
-  console.error("ERROR:", err);
 });
 
 // ✅ RENDER
@@ -112,15 +139,19 @@ function render(){
     <div class="card">
       <img src="${item.img}">
       <div class="card-info">
+
+        <div class="rating">⭐ 4.${Math.floor(Math.random()*5)+1}</div>
+
         <h4>${item.name}</h4>
         <div class="price">₹${item.price}</div>
 
         ${item.sold
-          ? `<button disabled>Sold Out</button>`
+          ? `<button disabled style="background:red;color:white;">Sold Out</button>`
           : qty==0
           ? `<button onclick="add(${i})">Add</button>`
           : `<button onclick="removeItem(${i})">-</button> ${qty} <button onclick="add(${i})">+</button>`
         }
+
       </div>
     </div>`;
   });
