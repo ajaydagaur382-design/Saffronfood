@@ -58,6 +58,12 @@ const firebaseConfig = {
 
 // 🔥 INIT
 firebase.initializeApp(firebaseConfig);
+
+const db = firebase.firestore();
+
+db.settings({
+  experimentalForceLongPolling: true
+});
 console.log("PROJECT:", firebase.app().options.projectId);
 const db = firebase.firestore();
 
