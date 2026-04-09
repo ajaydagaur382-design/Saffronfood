@@ -63,6 +63,28 @@ align-items:center;
 z-index:999;
 box-shadow:0 -3px 10px rgba(0,0,0,0.5);
 }
+
+.popup{
+position:fixed;
+top:0;left:0;
+width:100%;height:100%;
+background:#0009;
+display:none;
+justify-content:center;
+align-items:center;
+z-index:9999;
+}
+
+.popup-box{
+background:white;
+color:black;
+padding:15px;
+border-radius:12px;
+width:250px;
+display:flex;
+flex-direction:column;
+gap:8px;
+}
 </style>
 </head>
 
@@ -84,12 +106,34 @@ box-shadow:0 -3px 10px rgba(0,0,0,0.5);
 
 <div class="summary">
 Total ₹<span id="total">0</span>
-<button onclick="alert('Order feature connected with WhatsApp already')">Order</button>
+<button onclick="openPopup()">Order</button>
+</div>
+
+<!-- POPUP -->
+<div id="popup" class="popup">
+  <div class="popup-box">
+    <input id="name" placeholder="Name">
+    <input id="phone" placeholder="Phone">
+    <input id="address" placeholder="Address">
+
+    <select id="payment">
+      <option>Cash</option>
+      <option>Online</option>
+    </select>
+
+    <select id="ordertype">
+      <option>Dining</option>
+      <option>Take Away</option>
+    </select>
+
+    <button onclick="order()">Confirm</button>
+    <button onclick="closePopup()">Back</button>
+  </div>
 </div>
 
 <script>
 
-// ✅ FIREBASE CONFIG
+// 🔥 FIREBASE CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyBftbnp4hW65s5SQNwkizgp_nY4jfk80l4",
   authDomain: "saffron-new.firebaseapp.com",
@@ -107,7 +151,7 @@ db.settings({ experimentalForceLongPolling: true });
 let items = [];
 let cart = {};
 
-// ✅ LOAD DATA (REALTIME)
+// 🔥 LOAD ITEMS
 db.collection("items").onSnapshot(snapshot=>{
   items = [];
 
@@ -118,14 +162,14 @@ db.collection("items").onSnapshot(snapshot=>{
       name: d.name,
       price: d.price,
       sold: d.sold,
-      img: d.img   // ✅ FIXED (firebase image)
+      img: d.img
     });
   });
 
   render();
 });
 
-// ✅ RENDER
+// 🔥 RENDER
 function render(){
   let html="";
   let search=document.getElementById("search").value.toLowerCase();
@@ -160,7 +204,7 @@ function render(){
   updateTotal();
 }
 
-// ✅ CART
+// 🔥 CART
 function add(i){
   cart[i]=(cart[i]||0)+1;
   render();
@@ -178,6 +222,60 @@ function updateTotal(){
     t+=items[i].price*cart[i];
   }
   document.getElementById("total").innerText = t;
+}
+
+// 🔥 POPUP
+function openPopup(){
+  if(Object.keys(cart).length==0){
+    alert("Add items first");
+    return;
+  }
+  document.getElementById("popup").style.display="flex";
+}
+
+function closePopup(){
+  document.getElementById("popup").style.display="none";
+}
+
+// 🔥 ORDER FUNCTION
+function order(){
+  let name = document.getElementById("name").value;
+  let phone = document.getElementById("phone").value;
+  let address = document.getElementById("address").value;
+  let payment = document.getElementById("payment").value;
+  let ordertype = document.getElementById("ordertype").value;
+
+  if(!name || !phone){
+    alert("Fill details");
+    return;
+  }
+
+  let msg="🍔 *Saffron Food Order*%0A%0A";
+
+  for(let i in cart){
+    let item = items[i];
+    msg+=`• ${item.name} x${cart[i]} = ₹${item.price*cart[i]}%0A`;
+  }
+
+  msg+=`%0A💰 Total: ₹${total.innerText}`;
+  msg+=`%0A👤 Name: ${name}`;
+  msg+=`%0A📞 Phone: ${phone}`;
+  msg+=`%0A📍 Address: ${address}`;
+  msg+=`%0A💳 Payment: ${payment}`;
+  msg+=`%0A🍽 Order Type: ${ordertype}`;
+
+  // 🔥 SAVE ORDER
+  db.collection("orders").add({
+    name, phone, address, payment, ordertype,
+    total: total.innerText,
+    items: JSON.stringify(cart),
+    time: new Date()
+  });
+
+  // 🔥 WHATSAPP
+  window.open(`https://wa.me/918449481394?text=${msg}`);
+
+  closePopup();
 }
 
 </script>
