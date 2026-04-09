@@ -56,29 +56,35 @@ const firebaseConfig = {
   appId: "1:206462166451:web:7cccd054aec21e0ade97c6"
 };
 
-// 🔥 INIT
-firebase.initializeApp(firebaseConfig);
+// 🔥 SAFE INIT
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
 
 const db = firebase.firestore();
+
+// 🔥 FIX FOR GITHUB PAGES
 db.settings({
   experimentalForceLongPolling: true
 });
-console.log("PROJECT:", firebase.app().options.projectId);
 
 let items = [];
 let cart = {};
 
-// 🔥 LOAD FROM FIRESTORE + ALERT TEST
-db.collection("items").get().then((snapshot)=>{
-  console.log("SIZE:", snapshot.size);
+// 🔥 FORCE SERVER FETCH
+db.collection("items").get({ source: "server" })
+.then((snapshot) => {
+  console.log("PROJECT:", firebase.app().options.projectId);
+  console.log("SERVER SIZE:", snapshot.size);
 
-  if(snapshot.size === 0){
-    alert("❌ Firestore EMPTY hai");
+  if (snapshot.empty) {
+    alert("❌ SERVER se empty aa raha hai");
+    return;
   }
 
   items = [];
 
-  snapshot.forEach(doc=>{
+  snapshot.forEach(doc => {
     let d = doc.data();
 
     items.push({
@@ -90,6 +96,9 @@ db.collection("items").get().then((snapshot)=>{
   });
 
   render();
+})
+.catch((err)=>{
+  console.error("ERROR:", err);
 });
 
 // 🔥 RENDER
