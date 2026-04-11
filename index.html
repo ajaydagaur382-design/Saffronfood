@@ -288,25 +288,28 @@ alert("Address required");
 return;
 }
 
-let msg="🍔 *Saffron Food Order*%0A%0A";
+let msg="🍔 *Saffron Order*%0A%0A";
 
+// ITEMS (NO SYMBOLS)
 for(let i in cart){
 let item=items[i];
-msg+=`🧾 ${item.name} ${cart[i].size ? "(" + cart[i].size + ")" : ""} x${cart[i].qty} = ₹${cart[i].price*cart[i].qty}%0A`;
+msg+=`${item.name} ${cart[i].size ? "(" + cart[i].size + ")" : ""} x${cart[i].qty} = ₹${cart[i].price*cart[i].qty}%0A`;
 }
 
-msg+=`%0A💰 *Total:* ₹${total.innerText}%0A%0A`;
+// TOTAL
+msg+=`%0A💰 ₹${total.innerText}%0A%0A`;
 
-msg+=`👤 :* ${name}%0A`;
-msg+=`📞 :* ${phone}%0A`;
-msg+=`🍽  :* ${ordertype}%0A`;
-msg+=`💳 :* ${payment}%0A`;
+// ONLY ICONS (NO TEXT)
+msg+=`👤 ${name}%0A`;
+msg+=`📞 ${phone}%0A`;
+msg+=`🍽 ${ordertype}%0A`;
+msg+=`💳 ${payment}%0A`;
 
 if(ordertype==="Take Away"){
-msg+=`📍 *Address:* ${address}%0A`;
+msg+=`📍 ${address}%0A`;
 }
 
-// SAVE
+// SAVE (same)
 db.collection("orders").add({
 name, phone, address, payment, ordertype,
 total: total.innerText,
@@ -319,7 +322,6 @@ window.open(`https://wa.me/918449481394?text=${msg}`);
 
 closePopup();
 }
-
 </script>
 
 </body>
