@@ -38,7 +38,11 @@ transition:0.2s;
 }
 .card:hover{transform:scale(1.03);}
 
-.card img{width:100%;height:120px;object-fit:cover;}
+.card img{
+width:100%;
+height:120px;
+object-fit:cover;
+}
 
 .card-info{padding:8px;}
 .price{color:gold;}
@@ -48,7 +52,6 @@ button{
 background:gold;border:none;padding:5px;border-radius:5px;
 cursor:pointer;font-size:12px;
 }
-button:hover{opacity:0.8;}
 
 .summary{
 position:fixed;
@@ -61,9 +64,9 @@ display:flex;
 justify-content:space-between;
 align-items:center;
 z-index:999;
-box-shadow:0 -3px 10px rgba(0,0,0,0.5);
 }
 
+/* POPUP */
 .popup{
 position:fixed;
 top:0;left:0;
@@ -80,7 +83,7 @@ background:white;
 color:black;
 padding:15px;
 border-radius:12px;
-width:250px;
+width:260px;
 display:flex;
 flex-direction:column;
 gap:8px;
@@ -109,7 +112,7 @@ Total ₹<span id="total">0</span>
 <button onclick="openPopup()">Order</button>
 </div>
 
-<!-- POPUP -->
+<!-- ORDER POPUP -->
 <div id="popup" class="popup">
   <div class="popup-box">
     <input id="name" placeholder="Name">
@@ -131,6 +134,16 @@ Total ₹<span id="total">0</span>
   </div>
 </div>
 
+<!-- SIZE POPUP -->
+<div id="sizePopup" class="popup">
+  <div class="popup-box">
+    <h3>Select Size</h3>
+    <button onclick="addSize('half')">Half</button>
+    <button onclick="addSize('full')">Full</button>
+    <button onclick="closeSize()">Cancel</button>
+  </div>
+</div>
+
 <script>
 
 // 🔥 FIREBASE CONFIG
@@ -145,11 +158,11 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-
 db.settings({ experimentalForceLongPolling: true });
 
 let items = [];
 let cart = {};
+let selectedIndex = null;
 
 // 🔥 LOAD ITEMS
 db.collection("items").onSnapshot(snapshot=>{
@@ -160,9 +173,11 @@ db.collection("items").onSnapshot(snapshot=>{
 
     items.push({
       name: d.name,
-      price: d.price,
-      sold: d.sold,
-      img: d.img
+      price: d.price || null,
+      half: d.half || null,
+      full: d.full || null,
+      sold: d.sold || false,
+      img: d.img || "https://via.placeholder.com/150"
     });
   });
 
@@ -177,7 +192,7 @@ function render(){
   items.forEach((item,i)=>{
     if(!item.name.toLowerCase().includes(search)) return;
 
-    let qty = cart[i] || 0;
+    let qty = cart[i]?.qty || 0;
 
     html+=`
     <div class="card">
@@ -187,13 +202,20 @@ function render(){
         <div class="rating">⭐ 4.${Math.floor(Math.random()*5)+1}</div>
 
         <h4>${item.name}</h4>
-        <div class="price">₹${item.price}</div>
 
-        ${item.sold
-          ? `<button disabled style="background:red;color:white;">Sold Out</button>`
-          : qty==0
-          ? `<button onclick="add(${i})">Add</button>`
-          : `<button onclick="removeItem(${i})">-</button> ${qty} <button onclick="add(${i})">+</button>`
+        <div class="price">
+        ${item.price 
+          ? `₹${item.price}` 
+          : `Half ₹${item.half} / Full ₹${item.full}`
+        }
+        </div>
+
+        ${
+        item.sold
+        ? `<button disabled style="background:red;color:white;">Sold Out</button>`
+        : qty==0
+        ? `<button onclick="handleAdd(${i})">Add</button>`
+        : `<button onclick="removeItem(${i})">-</button> ${qty} <button onclick="handleAdd(${i})">+</button>`
         }
 
       </div>
@@ -204,27 +226,52 @@ function render(){
   updateTotal();
 }
 
+// 🔥 HANDLE ADD
+function handleAdd(i){
+  if(items[i].half && items[i].full){
+    selectedIndex = i;
+    document.getElementById("sizePopup").style.display="flex";
+  }else{
+    add(i, items[i].price);
+  }
+}
+
+function addSize(size){
+  let item = items[selectedIndex];
+  let price = size === "half" ? item.half : item.full;
+
+  add(selectedIndex, price, size);
+  closeSize();
+}
+
+function closeSize(){
+  document.getElementById("sizePopup").style.display="none";
+}
+
 // 🔥 CART
-function add(i){
-  cart[i]=(cart[i]||0)+1;
+function add(i, price, size=""){
+  if(!cart[i]){
+    cart[i]={qty:0, price:price, size:size};
+  }
+  cart[i].qty++;
   render();
 }
 
 function removeItem(i){
-  cart[i]--;
-  if(cart[i]<=0) delete cart[i];
+  cart[i].qty--;
+  if(cart[i].qty<=0) delete cart[i];
   render();
 }
 
 function updateTotal(){
   let t=0;
   for(let i in cart){
-    t+=items[i].price*cart[i];
+    t+=cart[i].price * cart[i].qty;
   }
   document.getElementById("total").innerText = t;
 }
 
-// 🔥 POPUP
+// 🔥 ORDER POPUP
 function openPopup(){
   if(Object.keys(cart).length==0){
     alert("Add items first");
@@ -237,13 +284,11 @@ function closePopup(){
   document.getElementById("popup").style.display="none";
 }
 
-// 🔥 ORDER FUNCTION
+// 🔥 ORDER
 function order(){
   let name = document.getElementById("name").value;
   let phone = document.getElementById("phone").value;
   let address = document.getElementById("address").value;
-  let payment = document.getElementById("payment").value;
-  let ordertype = document.getElementById("ordertype").value;
 
   if(!name || !phone){
     alert("Fill details");
@@ -254,27 +299,24 @@ function order(){
 
   for(let i in cart){
     let item = items[i];
-    msg+=`• ${item.name} x${cart[i]} = ₹${item.price*cart[i]}%0A`;
+    let c = cart[i];
+
+    msg+=`• ${item.name} ${c.size?`(${c.size})`:""} x${c.qty} = ₹${c.price*c.qty}%0A`;
   }
 
   msg+=`%0A💰 Total: ₹${total.innerText}`;
   msg+=`%0A👤 Name: ${name}`;
   msg+=`%0A📞 Phone: ${phone}`;
   msg+=`%0A📍 Address: ${address}`;
-  msg+=`%0A💳 Payment: ${payment}`;
-  msg+=`%0A🍽 Order Type: ${ordertype}`;
 
-  // 🔥 SAVE ORDER
   db.collection("orders").add({
-    name, phone, address, payment, ordertype,
+    name, phone, address,
     total: total.innerText,
-    items: JSON.stringify(cart),
+    cart,
     time: new Date()
   });
 
-  // 🔥 WHATSAPP
   window.open(`https://wa.me/918449481394?text=${msg}`);
-
   closePopup();
 }
 
