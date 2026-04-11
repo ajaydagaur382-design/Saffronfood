@@ -1,242 +1,278 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Food Order</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Saffron Food</title>
 
-  <style>
-    body {
-      font-family: Arial;
-      margin: 0;
-      background: #f5f5f5;
-    }
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
-    .category-header {
-      position: sticky;
-      top: 0;
-      background: white;
-      padding: 12px;
-      font-weight: bold;
-      font-size: 18px;
-      border-bottom: 2px solid #eee;
-      z-index: 10;
-    }
+<style>
+body{margin:0;font-family:Poppins;background:#0f0f0f;color:white;}
 
-    .container {
-      padding-bottom: 80px;
-    }
+.header{
+display:flex;align-items:center;gap:12px;padding:14px;
+background:linear-gradient(135deg,#ff7e5f,#feb47b);
+position:sticky;top:0;z-index:1000;
+}
 
-    .card {
-      display: flex;
-      background: white;
-      margin: 10px;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
+.header img{width:45px;border-radius:50%;}
 
-    .card img {
-      width: 100px;
-      height: 100px;
-      object-fit: cover;
-    }
+.search{padding:10px;}
+.search input{width:100%;padding:10px;border-radius:6px;border:none;}
 
-    .card-content {
-      flex: 1;
-      padding: 10px;
-    }
+.menu{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+gap:12px;
+padding:10px;
+padding-bottom:120px;
+}
 
-    .price {
-      font-weight: bold;
-      margin-top: 5px;
-    }
+.card{
+background:#1c1c1c;
+border-radius:12px;
+overflow:hidden;
+}
 
-    .add-btn {
-      background: linear-gradient(45deg, #ff4e50, #fc913a);
-      color: white;
-      border: none;
-      padding: 6px 10px;
-      border-radius: 6px;
-      cursor: pointer;
-      margin-top: 8px;
-    }
+.card img{width:100%;height:120px;object-fit:cover;}
 
-    .add-btn:hover {
-      opacity: 0.9;
-    }
+.card-info{padding:8px;}
+.price{color:gold;}
+.rating{font-size:12px;color:#00ff9d;}
 
-    .order-btn {
-      position: fixed;
-      bottom: 0;
-      width: 100%;
-      background: linear-gradient(45deg, #36d1dc, #5b86e5);
-      color: white;
-      padding: 15px;
-      text-align: center;
-      font-size: 18px;
-      font-weight: bold;
-      border: none;
-    }
+button{
+background:gold;border:none;padding:6px;border-radius:6px;
+cursor:pointer;font-size:12px;
+}
 
-    /* Popup */
-    .popup {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.5);
-      display: none;
-      justify-content: center;
-      align-items: center;
-    }
+.summary{
+position:fixed;
+bottom:0;
+width:100%;
+background:#111;
+padding:12px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
 
-    .popup-content {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      text-align: center;
-    }
+.summary button{
+padding:10px 15px;
+background:linear-gradient(45deg,#ff9800,#ff5722);
+color:white;
+font-weight:bold;
+}
 
-    .popup button {
-      margin: 5px;
-      padding: 8px 12px;
-    }
-  </style>
+.category{
+grid-column:1/-1;
+font-weight:bold;
+padding:8px;
+background:#000;
+border-bottom:1px solid #333;
+}
+
+.popup{
+position:fixed;
+top:0;left:0;
+width:100%;height:100%;
+background:#0009;
+display:none;
+justify-content:center;
+align-items:center;
+}
+
+.popup-box{
+background:white;color:black;
+padding:15px;border-radius:10px;
+display:flex;flex-direction:column;gap:8px;
+}
+</style>
 </head>
 
 <body>
 
-<div class="container" id="menu"></div>
+<header class="header">
+<img src="https://cdn-icons-png.flaticon.com/512/1046/1046784.png">
+<div>
+<h2>Saffron Food</h2>
+<p>Fast Delivery • Fresh Food</p>
+</div>
+</header>
 
-<button class="order-btn" onclick="sendOrder()">Place Order</button>
-
-<!-- Popup -->
-<div class="popup" id="popup">
-  <div class="popup-content">
-    <p>Select option</p>
-    <button onclick="selectOption('half')">Half</button>
-    <button onclick="selectOption('full')">Full</button>
-  </div>
+<div class="search">
+<input id="search" placeholder="Search food..." oninput="render()">
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+<div id="menu" class="menu"></div>
+
+<div class="summary">
+Total ₹<span id="total">0</span>
+<button onclick="openPopup()">Place Order</button>
+</div>
+
+<!-- ORDER POPUP -->
+<div id="popup" class="popup">
+<div class="popup-box">
+<input id="name" placeholder="Name">
+<input id="phone" placeholder="Phone">
+<input id="address" placeholder="Address">
+<button onclick="order()">Confirm</button>
+<button onclick="closePopup()">Back</button>
+</div>
+</div>
 
 <script>
-  const firebaseConfig = {
-    apiKey: "YOUR_KEY",
-    authDomain: "YOUR_DOMAIN",
-    projectId: "YOUR_ID"
-  };
 
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
+// 🔥 FIREBASE CONFIG
+const firebaseConfig = {
+  apiKey: "AIzaSyBftbnp4hW65s5SQNwkizgp_nY4jfk80l4",
+  authDomain: "saffron-new.firebaseapp.com",
+  projectId: "saffron-new",
+  storageBucket: "saffron-new.appspot.com",
+  messagingSenderId: "645716182774",
+  appId: "1:645716182774:web:ff53d375050520698b8ed7"
+};
 
-  const categoryOrder = [
-    "burger","snacks","noodles","sandwich","pasta",
-    "momos","paratha","maggi","rice","drink","extra"
-  ];
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-  let cart = [];
-  let selectedItem = null;
+db.settings({ experimentalForceLongPolling: true });
 
-  db.collection("items").onSnapshot(snapshot => {
-    let items = [];
+let items = [];
+let cart = {};
 
-    snapshot.forEach(doc => {
-      items.push({ id: doc.id, ...doc.data() });
+// 🔥 CATEGORY ORDER
+const orderList = [
+"burger","snacks","noodles","sandwich","pasta",
+"momos","paratha","maggi","rice","drink","extra"
+];
+
+// 🔥 LOAD
+db.collection("items").onSnapshot(snap=>{
+  items=[];
+  snap.forEach(doc=>{
+    let d = doc.data();
+
+    items.push({
+      name:d.name,
+      price:d.price || null,
+      half:d.half || null,
+      full:d.full || null,
+      category:d.category,
+      img:d.img || "https://via.placeholder.com/150"
     });
-
-    renderItems(items);
   });
 
-  function renderItems(items) {
-    const menu = document.getElementById("menu");
-    menu.innerHTML = "";
+  render();
+});
 
-    let grouped = {};
+// 🔥 RENDER
+function render(){
+let html="";
+let search=document.getElementById("search").value.toLowerCase();
 
-    items.forEach(item => {
-      if (!grouped[item.category]) grouped[item.category] = [];
-      grouped[item.category].push(item);
-    });
+orderList.forEach(cat=>{
 
-    categoryOrder.forEach(cat => {
-      if (!grouped[cat]) return;
+let filtered = items.filter(i=>i.category===cat && i.name.toLowerCase().includes(search));
 
-      let header = document.createElement("div");
-      header.className = "category-header";
-      header.innerText = cat.toUpperCase();
-      menu.appendChild(header);
+if(filtered.length==0) return;
 
-      grouped[cat].forEach(item => {
-        let card = document.createElement("div");
-        card.className = "card";
+html+=`<div class="category">${cat.toUpperCase()}</div>`;
 
-        let imgSrc = item.img || "https://via.placeholder.com/100";
+filtered.forEach(item=>{
+let i = items.indexOf(item);
+let qty = cart[i] || 0;
 
-        card.innerHTML = `
-          <img src="${imgSrc}">
-          <div class="card-content">
-            <div>${item.name}</div>
-            <div class="price">
-              ${item.half && item.full 
-                ? `Half ₹${item.half} / Full ₹${item.full}`
-                : `₹${item.price}`
-              }
-            </div>
-            <button class="add-btn">Add</button>
-          </div>
-        `;
+html+=`
+<div class="card">
+<img src="${item.img}">
+<div class="card-info">
 
-        card.querySelector(".add-btn").onclick = () => {
-          if (item.half && item.full) {
-            selectedItem = item;
-            document.getElementById("popup").style.display = "flex";
-          } else {
-            cart.push({ name: item.name, price: item.price });
-          }
-        };
+<div class="rating">⭐ 4.${Math.floor(Math.random()*5)+1}</div>
 
-        menu.appendChild(card);
-      });
-    });
-  }
+<h4>${item.name}</h4>
 
-  function selectOption(type) {
-    if (!selectedItem) return;
+<div class="price">
+${item.price ? `₹${item.price}` : `Half ₹${item.half} / Full ₹${item.full}`}
+</div>
 
-    if (type === "half") {
-      cart.push({
-        name: selectedItem.name + " (Half)",
-        price: selectedItem.half
-      });
-    } else {
-      cart.push({
-        name: selectedItem.name + " (Full)",
-        price: selectedItem.full
-      });
-    }
+${qty==0
+? `<button onclick="add(${i})">Add</button>`
+: `<button onclick="removeItem(${i})">-</button> ${qty} <button onclick="add(${i})">+</button>`
+}
 
-    document.getElementById("popup").style.display = "none";
-  }
+</div>
+</div>`;
+});
 
-  function sendOrder() {
-    if (cart.length === 0) {
-      alert("Cart is empty");
-      return;
-    }
+});
 
-    let message = "Order:\n";
+document.getElementById("menu").innerHTML=html;
+updateTotal();
+}
 
-    cart.forEach(item => {
-      message += `${item.name} - ₹${item.price}\n`;
-    });
+// 🔥 CART
+function add(i){
+cart[i]=(cart[i]||0)+1;
+render();
+}
 
-    let url = `https://wa.me/91XXXXXXXXXX?text=${encodeURIComponent(message)}`;
-    window.open(url, "_blank");
-  }
+function removeItem(i){
+cart[i]--;
+if(cart[i]<=0) delete cart[i];
+render();
+}
+
+function updateTotal(){
+let t=0;
+for(let i in cart){
+let item = items[i];
+t+= (item.price || item.half) * cart[i];
+}
+total.innerText=t;
+}
+
+// 🔥 POPUP
+function openPopup(){
+if(Object.keys(cart).length==0){alert("Add items");return;}
+popup.style.display="flex";
+}
+
+function closePopup(){
+popup.style.display="none";
+}
+
+// 🔥 ORDER
+function order(){
+let name=nameInput();
+let phone=phoneInput();
+let address=addressInput();
+
+if(!name || !phone){alert("Fill details");return;}
+
+let msg="🍔 *Saffron Order*%0A";
+
+for(let i in cart){
+let item=items[i];
+let price=item.price || item.half;
+msg+=`%0A${item.name} x${cart[i]} = ₹${price*cart[i]}`;
+}
+
+msg+=`%0A%0ATotal ₹${total.innerText}`;
+msg+=`%0AName: ${name}`;
+msg+=`%0APhone: ${phone}`;
+msg+=`%0AAddress: ${address}`;
+
+window.open(`https://wa.me/918449481394?text=${msg}`);
+closePopup();
+}
+
+function nameInput(){return document.getElementById("name").value;}
+function phoneInput(){return document.getElementById("phone").value;}
+function addressInput(){return document.getElementById("address").value;}
+
 </script>
 
 </body>
