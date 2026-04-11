@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -97,7 +98,7 @@ gap:8px;
 <img src="https://cdn-icons-png.flaticon.com/512/1046/1046784.png">
 <div>
 <h2>Saffron Food</h2>
-<p>Good food • good mood</p>
+<p>Fast Delivery • Fresh Food</p>
 </div>
 </header>
 
@@ -146,6 +147,21 @@ Total ₹<span id="total">0</span>
 
 <script>
 
+// 🔥 CATEGORY ORDER
+const categoryOrder = [
+  "burger",
+  "snacks",
+  "noodles",
+  "sandwich",
+  "pasta",
+  "momos",
+  "paratha",
+  "maggi",
+  "rice",
+  "drink",
+  "extra"
+];
+
 // 🔥 FIREBASE CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyBftbnp4hW65s5SQNwkizgp_nY4jfk80l4",
@@ -173,6 +189,7 @@ db.collection("items").onSnapshot(snapshot=>{
 
     items.push({
       name: d.name,
+      category: d.category,
       price: d.price || null,
       half: d.half || null,
       full: d.full || null,
@@ -184,49 +201,61 @@ db.collection("items").onSnapshot(snapshot=>{
   render();
 });
 
-// 🔥 RENDER
+// 🔥 RENDER (CATEGORY WISE)
 function render(){
   let html="";
   let search=document.getElementById("search").value.toLowerCase();
 
-  items.forEach((item,i)=>{
-    if(!item.name.toLowerCase().includes(search)) return;
+  categoryOrder.forEach(cat=>{
 
-    let qty = cart[i]?.qty || 0;
+    let filtered = items.filter(item =>
+      item.category === cat &&
+      item.name.toLowerCase().includes(search)
+    );
 
-    html+=`
-    <div class="card">
-      <img src="${item.img}">
-      <div class="card-info">
+    if(filtered.length === 0) return;
 
-        <div class="rating">⭐ 4.${Math.floor(Math.random()*5)+1}</div>
+    html += `<h2 style="color:gold;padding-left:10px;">${cat.toUpperCase()}</h2>`;
 
-        <h4>${item.name}</h4>
+    filtered.forEach(item=>{
+      let i = items.indexOf(item);
+      let qty = cart[i]?.qty || 0;
 
-        <div class="price">
-        ${item.price 
-          ? `₹${item.price}` 
-          : `Half ₹${item.half} / Full ₹${item.full}`
-        }
+      html+=`
+      <div class="card">
+        <img src="${item.img}">
+        <div class="card-info">
+
+          <div class="rating">⭐ 4.${Math.floor(Math.random()*5)+1}</div>
+
+          <h4>${item.name}</h4>
+
+          <div class="price">
+          ${item.price 
+            ? `₹${item.price}` 
+            : `Half ₹${item.half} / Full ₹${item.full}`
+          }
+          </div>
+
+          ${
+          item.sold
+          ? `<button disabled style="background:red;color:white;">Sold Out</button>`
+          : qty==0
+          ? `<button onclick="handleAdd(${i})">Add</button>`
+          : `<button onclick="removeItem(${i})">-</button> ${qty} <button onclick="handleAdd(${i})">+</button>`
+          }
+
         </div>
+      </div>`;
+    });
 
-        ${
-        item.sold
-        ? `<button disabled style="background:red;color:white;">Sold Out</button>`
-        : qty==0
-        ? `<button onclick="handleAdd(${i})">Add</button>`
-        : `<button onclick="removeItem(${i})">-</button> ${qty} <button onclick="handleAdd(${i})">+</button>`
-        }
-
-      </div>
-    </div>`;
   });
 
   document.getElementById("menu").innerHTML = html;
   updateTotal();
 }
 
-// 🔥 HANDLE ADD
+// 🔥 ADD HANDLER
 function handleAdd(i){
   if(items[i].half && items[i].full){
     selectedIndex = i;
@@ -284,7 +313,7 @@ function closePopup(){
   document.getElementById("popup").style.display="none";
 }
 
-// 🔥 ORDER
+// 🔥 ORDER + WHATSAPP
 function order(){
   let name = document.getElementById("name").value;
   let phone = document.getElementById("phone").value;
@@ -324,3 +353,4 @@ function order(){
 
 </body>
 </html>
+```
