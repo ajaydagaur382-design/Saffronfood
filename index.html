@@ -30,12 +30,7 @@ padding:10px;
 padding-bottom:120px;
 }
 
-.card{
-background:#1c1c1c;
-border-radius:12px;
-overflow:hidden;
-}
-
+.card{background:#1c1c1c;border-radius:12px;overflow:hidden;}
 .card img{width:100%;height:120px;object-fit:cover;}
 
 .card-info{padding:8px;}
@@ -48,39 +43,33 @@ cursor:pointer;font-size:12px;
 }
 
 .summary{
-position:fixed;
-bottom:0;
-width:100%;
-background:#111;
-padding:12px;
-display:flex;
-justify-content:space-between;
-align-items:center;
+position:fixed;bottom:0;width:100%;
+background:#111;padding:12px;
+display:flex;justify-content:space-between;align-items:center;
 }
 
 .summary button{
 padding:10px 15px;
 background:linear-gradient(45deg,#ff9800,#ff5722);
-color:white;
-font-weight:bold;
+color:white;font-weight:bold;
 }
 
+/* ✅ CATEGORY SAME AS HEADER */
 .category{
 grid-column:1/-1;
 font-weight:bold;
-padding:8px;
-background:#000;
-border-bottom:1px solid #333;
+padding:10px;
+background:linear-gradient(135deg,#ff7e5f,#feb47b);
+color:black;
+border-radius:8px;
 }
 
+/* POPUPS */
 .popup{
-position:fixed;
-top:0;left:0;
+position:fixed;top:0;left:0;
 width:100%;height:100%;
 background:#0009;
-display:none;
-justify-content:center;
-align-items:center;
+display:none;justify-content:center;align-items:center;
 }
 
 .popup-box{
@@ -123,9 +112,19 @@ Total ₹<span id="total">0</span>
 </div>
 </div>
 
+<!-- HALF FULL POPUP -->
+<div id="sizePopup" class="popup">
+<div class="popup-box">
+<h3>Select Size</h3>
+<button onclick="selectHalf()">Half</button>
+<button onclick="selectFull()">Full</button>
+<button onclick="closeSize()">Cancel</button>
+</div>
+</div>
+
 <script>
 
-// 🔥 FIREBASE CONFIG
+// 🔥 FIREBASE
 const firebaseConfig = {
   apiKey: "AIzaSyBftbnp4hW65s5SQNwkizgp_nY4jfk80l4",
   authDomain: "saffron-new.firebaseapp.com",
@@ -142,30 +141,25 @@ db.settings({ experimentalForceLongPolling: true });
 
 let items = [];
 let cart = {};
+let selectedIndex = null;
 
-// 🔥 CATEGORY ORDER
-const orderList = [
-"burger","snacks","noodles","sandwich","pasta",
-"momos","paratha","maggi","rice","drink","extra"
-];
+const orderList = ["burger","snacks","noodles","sandwich","pasta","momos","paratha","maggi","rice","drink","extra"];
 
 // 🔥 LOAD
 db.collection("items").onSnapshot(snap=>{
-  items=[];
-  snap.forEach(doc=>{
-    let d = doc.data();
-
-    items.push({
-      name:d.name,
-      price:d.price || null,
-      half:d.half || null,
-      full:d.full || null,
-      category:d.category,
-      img:d.img || "https://via.placeholder.com/150"
-    });
-  });
-
-  render();
+items=[];
+snap.forEach(doc=>{
+let d=doc.data();
+items.push({
+name:d.name,
+price:d.price || null,
+half:d.half || null,
+full:d.full || null,
+category:d.category,
+img:d.img || "https://via.placeholder.com/150"
+});
+});
+render();
 });
 
 // 🔥 RENDER
@@ -174,16 +168,14 @@ let html="";
 let search=document.getElementById("search").value.toLowerCase();
 
 orderList.forEach(cat=>{
-
-let filtered = items.filter(i=>i.category===cat && i.name.toLowerCase().includes(search));
-
+let filtered=items.filter(i=>i.category===cat && i.name.toLowerCase().includes(search));
 if(filtered.length==0) return;
 
 html+=`<div class="category">${cat.toUpperCase()}</div>`;
 
 filtered.forEach(item=>{
-let i = items.indexOf(item);
-let qty = cart[i] || 0;
+let i=items.indexOf(item);
+let qty=cart[i]?.qty || 0;
 
 html+=`
 <div class="card">
@@ -199,37 +191,61 @@ ${item.price ? `₹${item.price}` : `Half ₹${item.half} / Full ₹${item.full}
 </div>
 
 ${qty==0
-? `<button onclick="add(${i})">Add</button>`
-: `<button onclick="removeItem(${i})">-</button> ${qty} <button onclick="add(${i})">+</button>`
+? `<button onclick="handleAdd(${i})">Add</button>`
+: `<button onclick="removeItem(${i})">-</button> ${qty} <button onclick="handleAdd(${i})">+</button>`
 }
 
 </div>
 </div>`;
 });
-
 });
 
-document.getElementById("menu").innerHTML=html;
+menu.innerHTML=html;
 updateTotal();
 }
 
+// 🔥 ADD HANDLER
+function handleAdd(i){
+if(items[i].half && items[i].full){
+selectedIndex=i;
+sizePopup.style.display="flex";
+}else{
+add(i, items[i].price);
+}
+}
+
+// 🔥 SIZE SELECT
+function selectHalf(){
+add(selectedIndex, items[selectedIndex].half, "Half");
+closeSize();
+}
+
+function selectFull(){
+add(selectedIndex, items[selectedIndex].full, "Full");
+closeSize();
+}
+
+function closeSize(){
+sizePopup.style.display="none";
+}
+
 // 🔥 CART
-function add(i){
-cart[i]=(cart[i]||0)+1;
+function add(i, price, size=""){
+if(!cart[i]) cart[i]={qty:0, price:price, size:size};
+cart[i].qty++;
 render();
 }
 
 function removeItem(i){
-cart[i]--;
-if(cart[i]<=0) delete cart[i];
+cart[i].qty--;
+if(cart[i].qty<=0) delete cart[i];
 render();
 }
 
 function updateTotal(){
 let t=0;
 for(let i in cart){
-let item = items[i];
-t+= (item.price || item.half) * cart[i];
+t+=cart[i].price*cart[i].qty;
 }
 total.innerText=t;
 }
@@ -246,9 +262,9 @@ popup.style.display="none";
 
 // 🔥 ORDER
 function order(){
-let name=nameInput();
-let phone=phoneInput();
-let address=addressInput();
+let name=document.getElementById("name").value;
+let phone=document.getElementById("phone").value;
+let address=document.getElementById("address").value;
 
 if(!name || !phone){alert("Fill details");return;}
 
@@ -256,8 +272,7 @@ let msg="🍔 *Saffron Order*%0A";
 
 for(let i in cart){
 let item=items[i];
-let price=item.price || item.half;
-msg+=`%0A${item.name} x${cart[i]} = ₹${price*cart[i]}`;
+msg+=`%0A${item.name} (${cart[i].size||""}) x${cart[i].qty} = ₹${cart[i].price*cart[i].qty}`;
 }
 
 msg+=`%0A%0ATotal ₹${total.innerText}`;
@@ -268,10 +283,6 @@ msg+=`%0AAddress: ${address}`;
 window.open(`https://wa.me/918449481394?text=${msg}`);
 closePopup();
 }
-
-function nameInput(){return document.getElementById("name").value;}
-function phoneInput(){return document.getElementById("phone").value;}
-function addressInput(){return document.getElementById("address").value;}
 
 </script>
 
