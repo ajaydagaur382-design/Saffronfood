@@ -54,7 +54,6 @@ background:linear-gradient(45deg,#ff9800,#ff5722);
 color:white;font-weight:bold;
 }
 
-/* ✅ CATEGORY SAME AS HEADER */
 .category{
 grid-column:1/-1;
 font-weight:bold;
@@ -104,15 +103,28 @@ Total ₹<span id="total">0</span>
 <!-- ORDER POPUP -->
 <div id="popup" class="popup">
 <div class="popup-box">
+
 <input id="name" placeholder="Name">
 <input id="phone" placeholder="Phone">
-<input id="address" placeholder="Address">
+<input id="address" placeholder="Address (for Take Away)">
+
+<select id="payment">
+<option value="Cash">Cash</option>
+<option value="Online">Online</option>
+</select>
+
+<select id="ordertype">
+<option value="Dining">Dining</option>
+<option value="Take Away">Take Away</option>
+</select>
+
 <button onclick="order()">Confirm</button>
 <button onclick="closePopup()">Back</button>
+
 </div>
 </div>
 
-<!-- HALF FULL POPUP -->
+<!-- SIZE POPUP -->
 <div id="sizePopup" class="popup">
 <div class="popup-box">
 <h3>Select Size</h3>
@@ -124,7 +136,7 @@ Total ₹<span id="total">0</span>
 
 <script>
 
-// 🔥 FIREBASE
+// FIREBASE
 const firebaseConfig = {
   apiKey: "AIzaSyBftbnp4hW65s5SQNwkizgp_nY4jfk80l4",
   authDomain: "saffron-new.firebaseapp.com",
@@ -136,7 +148,6 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-
 db.settings({ experimentalForceLongPolling: true });
 
 let items = [];
@@ -145,7 +156,7 @@ let selectedIndex = null;
 
 const orderList = ["burger","snacks","noodles","sandwich","pasta","momos","paratha","maggi","rice","drink","extra"];
 
-// 🔥 LOAD
+// LOAD ITEMS
 db.collection("items").onSnapshot(snap=>{
 items=[];
 snap.forEach(doc=>{
@@ -162,7 +173,7 @@ img:d.img || "https://via.placeholder.com/150"
 render();
 });
 
-// 🔥 RENDER
+// RENDER
 function render(){
 let html="";
 let search=document.getElementById("search").value.toLowerCase();
@@ -204,7 +215,7 @@ menu.innerHTML=html;
 updateTotal();
 }
 
-// 🔥 ADD HANDLER
+// ADD
 function handleAdd(i){
 if(items[i].half && items[i].full){
 selectedIndex=i;
@@ -214,7 +225,6 @@ add(i, items[i].price);
 }
 }
 
-// 🔥 SIZE SELECT
 function selectHalf(){
 add(selectedIndex, items[selectedIndex].half, "Half");
 closeSize();
@@ -229,7 +239,6 @@ function closeSize(){
 sizePopup.style.display="none";
 }
 
-// 🔥 CART
 function add(i, price, size=""){
 if(!cart[i]) cart[i]={qty:0, price:price, size:size};
 cart[i].qty++;
@@ -250,7 +259,7 @@ t+=cart[i].price*cart[i].qty;
 total.innerText=t;
 }
 
-// 🔥 POPUP
+// POPUP
 function openPopup(){
 if(Object.keys(cart).length==0){alert("Add items");return;}
 popup.style.display="flex";
@@ -260,27 +269,54 @@ function closePopup(){
 popup.style.display="none";
 }
 
-// 🔥 ORDER
+// FINAL ORDER FUNCTION 🔥
 function order(){
-let name=document.getElementById("name").value;
-let phone=document.getElementById("phone").value;
-let address=document.getElementById("address").value;
 
-if(!name || !phone){alert("Fill details");return;}
+let name = document.getElementById("name").value;
+let phone = document.getElementById("phone").value;
+let address = document.getElementById("address").value;
+let payment = document.getElementById("payment").value;
+let ordertype = document.getElementById("ordertype").value;
 
-let msg="🍔 *Saffron Order*%0A";
+if(!name || !phone){
+alert("Name & Phone required");
+return;
+}
+
+if(ordertype === "Take Away" && !address){
+alert("Address required");
+return;
+}
+
+let msg="🍔 *Saffron Food Order*%0A%0A";
 
 for(let i in cart){
 let item=items[i];
-msg+=`%0A${item.name} (${cart[i].size||""}) x${cart[i].qty} = ₹${cart[i].price*cart[i].qty}`;
+msg+=`🧾 ${item.name} ${cart[i].size ? "(" + cart[i].size + ")" : ""} x${cart[i].qty} = ₹${cart[i].price*cart[i].qty}%0A`;
 }
 
-msg+=`%0A%0ATotal ₹${total.innerText}`;
-msg+=`%0AName: ${name}`;
-msg+=`%0APhone: ${phone}`;
-msg+=`%0AAddress: ${address}`;
+msg+=`%0A💰 *Total:* ₹${total.innerText}%0A%0A`;
 
+msg+=`👤 *Name:* ${name}%0A`;
+msg+=`📞 *Phone:* ${phone}%0A`;
+msg+=`🍽 *Order Type:* ${ordertype}%0A`;
+msg+=`💳 *Payment:* ${payment}%0A`;
+
+if(ordertype==="Take Away"){
+msg+=`📍 *Address:* ${address}%0A`;
+}
+
+// SAVE
+db.collection("orders").add({
+name, phone, address, payment, ordertype,
+total: total.innerText,
+cart: cart,
+time: new Date()
+});
+
+// WHATSAPP
 window.open(`https://wa.me/918449481394?text=${msg}`);
+
 closePopup();
 }
 
