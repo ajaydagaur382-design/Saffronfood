@@ -3,79 +3,125 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Saffron Admin</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <style>
-body{margin:0;font-family:Poppins;background:#0f0f0f;color:white;}
+body{margin:0;background:#0b0b0b;color:white;font-family:Poppins;}
 
 .header{
+text-align:center;
 padding:15px;
-font-size:20px;
-font-weight:bold;
-background:linear-gradient(135deg,#ff7e5f,#feb47b);
+font-size:28px;
+color:gold;
+border-bottom:1px solid gold;
 }
 
-.container{padding:10px;}
-
-.grid{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-gap:12px;
+.container{
+display:flex;
+gap:15px;
+padding:15px;
 }
 
-.card{
-background:#1c1c1c;
-padding:10px;
-border-radius:12px;
-box-shadow:0 0 10px #000;
-transition:0.2s;
+/* LEFT MENU */
+.left{
+flex:2;
+max-height:80vh;
+overflow:auto;
 }
-.card:hover{transform:scale(1.03);}
 
-input{
-width:100%;
-padding:6px;
-border:none;
-border-radius:6px;
-margin-top:5px;
+.item{
+background:#151515;
+margin-bottom:10px;
+padding:12px;
+border-radius:10px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+.item h4{margin:0;}
+.controls{
+display:flex;
+gap:6px;
+flex-wrap:wrap;
 }
 
 button{
-margin-top:6px;
-padding:6px;
+padding:5px 8px;
 border:none;
 border-radius:6px;
 cursor:pointer;
-font-size:12px;
+font-size:11px;
 }
 
-.btn1{background:gold;}
-.btn2{background:red;color:white;}
-.btn3{background:#00c853;color:white;}
+.priceBtn{background:#00c853;color:white;}
+.soldBtn{background:red;color:white;}
+.deleteBtn{background:#ff1744;color:white;}
+.discountBtn{background:#ff9800;color:black;}
+.addBtn{background:gold;color:black;}
 
-.orderBox{
-background:#1c1c1c;
+/* RIGHT PANEL */
+.right{
+flex:1;
+background:#111;
+padding:15px;
+border-radius:12px;
+border:1px solid gold;
+}
+
+input,select{
+width:100%;
+padding:8px;
+margin-top:8px;
+border:none;
+border-radius:6px;
+background:#222;
+color:white;
+}
+
+.bigBtn{
 margin-top:10px;
+width:100%;
 padding:10px;
-border-radius:10px;
+background:gold;
+font-weight:bold;
 }
+
 </style>
 </head>
 
 <body>
 
-<div class="header">🔥 Saffron Admin Panel</div>
+<div class="header">SAFFRON ADMIN</div>
 
 <div class="container">
 
-<h3>🛒 Items Control</h3>
-<div id="items" class="grid"></div>
+<!-- LEFT -->
+<div class="left" id="items"></div>
 
-<h3>📦 Orders</h3>
-<div id="orders"></div>
+<!-- RIGHT -->
+<div class="right">
+
+<h3>Add New Item</h3>
+
+<input id="name" placeholder="Item Name">
+<input id="price" placeholder="Price">
+<input id="category" placeholder="Category">
+<input id="img" placeholder="Image name (aloo-tikki-burger.jpg)">
+
+<button class="bigBtn" onclick="addItem()">ADD ITEM</button>
+
+<hr>
+
+<h3>Global Discount</h3>
+<input id="globalDiscount" placeholder="Enter %">
+<button class="bigBtn" onclick="setGlobal()">Apply Discount</button>
+
+</div>
 
 </div>
 
@@ -83,104 +129,115 @@ border-radius:10px;
 
 // FIREBASE
 const firebaseConfig = {
-  apiKey: "AIzaSyBftbnp4hW65s5SQNwkizgp_nY4jfk80l4",
+  apiKey: "AIza...",
   authDomain: "saffron-new.firebaseapp.com",
-  projectId: "saffron-new",
-  storageBucket: "saffron-new.appspot.com",
-  messagingSenderId: "645716182774",
-  appId: "1:645716182774:web:ff53d375050520698b8ed7"
+  projectId: "saffron-new"
 };
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-let allItems=[];
+let items=[];
 
 // LOAD ITEMS
 db.collection("items").onSnapshot(snap=>{
-allItems=[];
+items=[];
 snap.forEach(doc=>{
-let d=doc.data();
-allItems.push({id:doc.id,...d});
+items.push({id:doc.id,...doc.data()});
 });
-renderItems();
+render();
 });
 
-// RENDER ITEMS
-function renderItems(){
+// RENDER
+function render(){
 let html="";
-allItems.forEach(item=>{
+items.forEach(item=>{
+
 html+=`
-<div class="card">
+<div class="item">
 
+<div>
 <h4>${item.name}</h4>
+<div>₹${item.price || item.half+" / "+item.full}</div>
+<div>${item.sold ? "❌ Sold" : "✅ Active"}</div>
+</div>
 
-<div>₹${item.price || (item.half+" / "+item.full)}</div>
+<div class="controls">
 
-<div>Status: ${item.sold ? "❌ Sold Out" : "✅ Available"}</div>
+<button class="priceBtn" onclick="updatePrice('${item.id}')">Update Price</button>
 
-<input id="disc-${item.id}" placeholder="Discount %">
-
-<button class="btn1" onclick="applyDiscount('${item.id}')">Apply Discount</button>
-
-<button class="btn2" onclick="toggleSold('${item.id}', ${item.sold})">
-${item.sold ? "Remove Sold Out" : "Mark Sold Out"}
+<button class="soldBtn" onclick="toggleSold('${item.id}',${item.sold})">
+${item.sold ? "Undo" : "Sold Out"}
 </button>
 
-</div>`;
+<button class="discountBtn" onclick="discountItem('${item.id}')">Discount</button>
+
+<button class="deleteBtn" onclick="deleteItem('${item.id}')">Delete</button>
+
+</div>
+
+</div>
+`;
 });
 
-document.getElementById("items").innerHTML=html;
+itemsDiv.innerHTML=html;
+}
+
+// UPDATE PRICE
+function updatePrice(id){
+let val=prompt("Enter new price");
+if(!val) return;
+db.collection("items").doc(id).update({price:Number(val)});
 }
 
 // SOLD OUT
 function toggleSold(id,current){
-db.collection("items").doc(id).update({
-sold: !current
-});
+db.collection("items").doc(id).update({sold:!current});
 }
 
 // DISCOUNT
-function applyDiscount(id){
-let val=document.getElementById("disc-"+id).value;
-if(!val) return alert("Enter discount");
-db.collection("items").doc(id).update({
-discount: Number(val)
-});
-alert("Discount Applied");
+function discountItem(id){
+let val=prompt("Enter discount %");
+if(!val) return;
+db.collection("items").doc(id).update({discount:Number(val)});
 }
 
-// LOAD ORDERS LIVE
-db.collection("orders").orderBy("time","desc")
-.onSnapshot(snap=>{
-let html="";
-snap.forEach(doc=>{
-let o=doc.data();
+// DELETE
+function deleteItem(id){
+if(confirm("Delete item?")){
+db.collection("items").doc(id).delete();
+}
+}
 
-html+=`
-<div class="orderBox">
+// ADD ITEM
+function addItem(){
+let name=document.getElementById("name").value;
+let price=document.getElementById("price").value;
+let category=document.getElementById("category").value;
+let img=document.getElementById("img").value;
 
-<div>👤 ${o.name}</div>
-<div>📞 ${o.phone}</div>
-<div>💰 ₹${o.total}</div>
-<div>🍽 ${o.ordertype}</div>
-<div>💳 ${o.payment}</div>
+if(!name || !price) return alert("Fill all");
 
-${o.address ? `<div>📍 ${o.address}</div>`:""}
-
-<hr>
-
-<button class="btn3" onclick="completeOrder('${doc.id}')">Mark Done</button>
-
-</div>`;
+db.collection("items").add({
+name,
+price:Number(price),
+category,
+img
 });
 
-document.getElementById("orders").innerHTML=html;
+alert("Added");
+}
+
+// GLOBAL DISCOUNT
+function setGlobal(){
+let val=document.getElementById("globalDiscount").value;
+if(!val) return;
+
+db.collection("settings").doc("main").set({
+discount:Number(val)
 });
 
-// DELETE ORDER
-function completeOrder(id){
-db.collection("orders").doc(id).delete();
+alert("Global Discount Set");
 }
 
 </script>
