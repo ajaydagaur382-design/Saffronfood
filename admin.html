@@ -1,9 +1,7 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Saffron Admin</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -15,79 +13,59 @@ body{margin:0;background:#0b0b0b;color:white;font-family:Poppins;}
 .header{
 text-align:center;
 padding:15px;
-font-size:28px;
+font-size:26px;
 color:gold;
 border-bottom:1px solid gold;
 }
 
-.container{
-display:flex;
-gap:15px;
-padding:15px;
-}
+.container{display:flex;gap:15px;padding:15px;}
 
-/* LEFT MENU */
-.left{
-flex:2;
-max-height:80vh;
-overflow:auto;
-}
+.left{flex:2;max-height:85vh;overflow:auto;}
+.right{flex:1;background:#111;padding:15px;border-radius:10px;border:1px solid gold;}
 
-.item{
+.card{
 background:#151515;
-margin-bottom:10px;
+margin-bottom:12px;
 padding:12px;
 border-radius:10px;
-display:flex;
-justify-content:space-between;
-align-items:center;
 }
 
-.item h4{margin:0;}
-.controls{
+.top{display:flex;justify-content:space-between;}
+
+.btns{
 display:flex;
 gap:6px;
+margin-top:8px;
 flex-wrap:wrap;
 }
 
 button{
-padding:5px 8px;
 border:none;
+padding:6px 8px;
 border-radius:6px;
 cursor:pointer;
 font-size:11px;
 }
 
-.priceBtn{background:#00c853;color:white;}
-.soldBtn{background:red;color:white;}
-.deleteBtn{background:#ff1744;color:white;}
-.discountBtn{background:#ff9800;color:black;}
-.addBtn{background:gold;color:black;}
+.price{background:#00c853;color:white;}
+.sold{background:red;color:white;}
+.discount{background:#ff9800;color:black;}
+.delete{background:#ff1744;color:white;}
 
-/* RIGHT PANEL */
-.right{
-flex:1;
-background:#111;
-padding:15px;
-border-radius:12px;
-border:1px solid gold;
-}
-
-input,select{
+input{
 width:100%;
 padding:8px;
 margin-top:8px;
 border:none;
 border-radius:6px;
-background:#222;
-color:white;
+background:#222;color:white;
 }
 
-.bigBtn{
-margin-top:10px;
+.big{
 width:100%;
 padding:10px;
 background:gold;
+margin-top:10px;
 font-weight:bold;
 }
 
@@ -96,30 +74,28 @@ font-weight:bold;
 
 <body>
 
-<div class="header">SAFFRON ADMIN</div>
+<div class="header">SAFFRON ADMIN PANEL</div>
 
 <div class="container">
 
-<!-- LEFT -->
+<!-- LEFT ITEMS -->
 <div class="left" id="items"></div>
 
-<!-- RIGHT -->
+<!-- RIGHT PANEL -->
 <div class="right">
 
-<h3>Add New Item</h3>
-
-<input id="name" placeholder="Item Name">
+<h3>Add Item</h3>
+<input id="name" placeholder="Name">
 <input id="price" placeholder="Price">
 <input id="category" placeholder="Category">
 <input id="img" placeholder="Image name (aloo-tikki-burger.jpg)">
-
-<button class="bigBtn" onclick="addItem()">ADD ITEM</button>
+<button class="big" onclick="addItem()">ADD ITEM</button>
 
 <hr>
 
 <h3>Global Discount</h3>
-<input id="globalDiscount" placeholder="Enter %">
-<button class="bigBtn" onclick="setGlobal()">Apply Discount</button>
+<input id="gdisc" placeholder="Enter %">
+<button class="big" onclick="setGlobal()">Apply</button>
 
 </div>
 
@@ -129,7 +105,7 @@ font-weight:bold;
 
 // FIREBASE
 const firebaseConfig = {
-  apiKey: "AIza...",
+  apiKey: "AIzaSy...",
   authDomain: "saffron-new.firebaseapp.com",
   projectId: "saffron-new"
 };
@@ -154,25 +130,28 @@ let html="";
 items.forEach(item=>{
 
 html+=`
-<div class="item">
+<div class="card">
 
+<div class="top">
 <div>
-<h4>${item.name}</h4>
-<div>₹${item.price || item.half+" / "+item.full}</div>
-<div>${item.sold ? "❌ Sold" : "✅ Active"}</div>
+<b>${item.name}</b><br>
+₹${item.price || item.half+" / "+item.full}<br>
+${item.sold ? "❌ Sold Out" : "✅ Available"}
+${item.discount ? `<br>🔥 ${item.discount}% OFF` : ""}
+</div>
 </div>
 
-<div class="controls">
+<div class="btns">
 
-<button class="priceBtn" onclick="updatePrice('${item.id}')">Update Price</button>
+<button class="price" onclick="updatePrice('${item.id}')">Update Price</button>
 
-<button class="soldBtn" onclick="toggleSold('${item.id}',${item.sold})">
-${item.sold ? "Undo" : "Sold Out"}
+<button class="sold" onclick="toggleSold('${item.id}',${item.sold})">
+${item.sold ? "Undo Sold" : "Mark Sold"}
 </button>
 
-<button class="discountBtn" onclick="discountItem('${item.id}')">Discount</button>
+<button class="discount" onclick="setDiscount('${item.id}')">Item Discount</button>
 
-<button class="deleteBtn" onclick="deleteItem('${item.id}')">Delete</button>
+<button class="delete" onclick="deleteItem('${item.id}')">Delete</button>
 
 </div>
 
@@ -180,43 +159,43 @@ ${item.sold ? "Undo" : "Sold Out"}
 `;
 });
 
-itemsDiv.innerHTML=html;
+document.getElementById("items").innerHTML=html;
 }
 
-// UPDATE PRICE
+// 🔥 UPDATE PRICE
 function updatePrice(id){
-let val=prompt("Enter new price");
-if(!val) return;
-db.collection("items").doc(id).update({price:Number(val)});
+let p=prompt("New Price:");
+if(!p) return;
+db.collection("items").doc(id).update({price:Number(p)});
 }
 
-// SOLD OUT
+// 🔥 SOLD OUT
 function toggleSold(id,current){
 db.collection("items").doc(id).update({sold:!current});
 }
 
-// DISCOUNT
-function discountItem(id){
-let val=prompt("Enter discount %");
-if(!val) return;
-db.collection("items").doc(id).update({discount:Number(val)});
+// 🔥 ITEM DISCOUNT
+function setDiscount(id){
+let d=prompt("Discount %:");
+if(!d) return;
+db.collection("items").doc(id).update({discount:Number(d)});
 }
 
-// DELETE
+// 🔥 DELETE
 function deleteItem(id){
 if(confirm("Delete item?")){
 db.collection("items").doc(id).delete();
 }
 }
 
-// ADD ITEM
+// 🔥 ADD ITEM
 function addItem(){
-let name=document.getElementById("name").value;
-let price=document.getElementById("price").value;
-let category=document.getElementById("category").value;
-let img=document.getElementById("img").value;
+let name=nameEl.value;
+let price=priceEl.value;
+let category=categoryEl.value;
+let img=imgEl.value;
 
-if(!name || !price) return alert("Fill all");
+if(!name || !price) return alert("Fill data");
 
 db.collection("items").add({
 name,
@@ -228,17 +207,22 @@ img
 alert("Added");
 }
 
-// GLOBAL DISCOUNT
+// 🔥 GLOBAL DISCOUNT
 function setGlobal(){
-let val=document.getElementById("globalDiscount").value;
+let val=gdisc.value;
 if(!val) return;
-
 db.collection("settings").doc("main").set({
 discount:Number(val)
 });
-
-alert("Global Discount Set");
+alert("Global Discount Applied");
 }
+
+// INPUT REF
+const nameEl=document.getElementById("name");
+const priceEl=document.getElementById("price");
+const categoryEl=document.getElementById("category");
+const imgEl=document.getElementById("img");
+const gdisc=document.getElementById("gdisc");
 
 </script>
 
