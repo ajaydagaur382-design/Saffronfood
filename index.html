@@ -168,9 +168,7 @@ half:d.half || null,
 full:d.full || null,
 category:d.category,
 img: d.img
-  ? (d.img.startsWith("http")
-      ? d.img
-      : "https://ajaydagaur382-design.github.io/Saffronfood/image/" + d.img)
+  ? "https://ajaydagaur382-design.github.io/Saffronfood/image/" + d.img.trim()
   : "https://via.placeholder.com/150"
 });
 });
