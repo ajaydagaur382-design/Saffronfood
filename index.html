@@ -19,6 +19,16 @@ position:sticky;top:0;z-index:1000;
 
 .header img{width:45px;border-radius:50%;}
 
+.offer{
+width:100%;
+text-align:center;
+background:#000;
+color:gold;
+font-weight:bold;
+padding:5px;
+font-size:14px;
+}
+
 .search{padding:10px;}
 .search input{width:100%;padding:10px;border-radius:6px;border:none;}
 
@@ -63,7 +73,6 @@ color:black;
 border-radius:8px;
 }
 
-/* POPUPS */
 .popup{
 position:fixed;top:0;left:0;
 width:100%;height:100%;
@@ -88,6 +97,8 @@ display:flex;flex-direction:column;gap:8px;
 <p>Fast Delivery • Fresh Food</p>
 </div>
 </header>
+
+<div id="offer" class="offer"></div>
 
 <div class="search">
 <input id="search" placeholder="Search food..." oninput="render()">
@@ -153,8 +164,17 @@ db.settings({ experimentalForceLongPolling: true });
 let items = [];
 let cart = {};
 let selectedIndex = null;
+let globalDiscount = 0;
 
 const orderList = ["burger","snacks","noodles","sandwich","pasta","momos","paratha","maggi","rice","drink","extra"];
+
+// 🔥 GLOBAL DISCOUNT LISTENER
+db.collection("settings").doc("main").onSnapshot(doc=>{
+if(doc.exists){
+globalDiscount = doc.data().discount || 0;
+offer.innerHTML = globalDiscount ? `🔥 ${globalDiscount}% OFF TODAY` : "";
+}
+});
 
 // LOAD ITEMS
 db.collection("items").onSnapshot(snap=>{
@@ -167,6 +187,8 @@ price:d.price || null,
 half:d.half || null,
 full:d.full || null,
 category:d.category,
+discount:d.discount || 0,
+sold:d.sold || false,
 img: d.img && d.img.startsWith("http")
   ? d.img
   : "https://ajaydagaur382-design.github.io/Saffronfood/image/" + d.img
@@ -200,10 +222,21 @@ html+=`
 <h4>${item.name}</h4>
 
 <div class="price">
-${item.price ? `₹${item.price}` : `Half ₹${item.half} / Full ₹${item.full}`}
+${
+item.price 
+? item.discount 
+  ? `<s>₹${item.price}</s> ₹${Math.floor(item.price - (item.price*item.discount/100))}`
+  : `₹${item.price}`
+: item.discount
+  ? `Half <s>₹${item.half}</s> ₹${Math.floor(item.half - (item.half*item.discount/100))} 
+     / Full <s>₹${item.full}</s> ₹${Math.floor(item.full - (item.full*item.discount/100))}`
+  : `Half ₹${item.half} / Full ₹${item.full}`
+}
 </div>
 
-${qty==0
+${item.sold
+? `<button disabled style="background:red;color:white;">Sold Out</button>`
+: qty==0
 ? `<button onclick="handleAdd(${i})">Add</button>`
 : `<button onclick="removeItem(${i})">-</button> ${qty} <button onclick="handleAdd(${i})">+</button>`
 }
@@ -258,7 +291,9 @@ let t=0;
 for(let i in cart){
 t+=cart[i].price*cart[i].qty;
 }
-total.innerText=t;
+
+let final = globalDiscount ? t - (t * globalDiscount / 100) : t;
+total.innerText=final;
 }
 
 // POPUP
@@ -271,7 +306,7 @@ function closePopup(){
 popup.style.display="none";
 }
 
-// FINAL ORDER FUNCTION 🔥
+// ORDER FUNCTION SAME
 function order(){
 
 let name = document.getElementById("name").value;
@@ -292,16 +327,13 @@ return;
 
 let msg="🍔 *Saffron Order*%0A%0A";
 
-// ITEMS (NO SYMBOLS)
 for(let i in cart){
 let item=items[i];
 msg+=`${item.name} ${cart[i].size ? "(" + cart[i].size + ")" : ""} x${cart[i].qty} = ₹${cart[i].price*cart[i].qty}%0A`;
 }
 
-// TOTAL
 msg+=`%0A💰 ₹${total.innerText}%0A%0A`;
 
-// ONLY ICONS (NO TEXT)
 msg+=`👤 ${name}%0A`;
 msg+=`📞 ${phone}%0A`;
 msg+=`🍽 ${ordertype}%0A`;
@@ -311,7 +343,6 @@ if(ordertype==="Take Away"){
 msg+=`📍 ${address}%0A`;
 }
 
-// SAVE (same)
 db.collection("orders").add({
 name, phone, address, payment, ordertype,
 total: total.innerText,
@@ -319,7 +350,6 @@ cart: cart,
 time: new Date()
 });
 
-// WHATSAPP
 window.open(`https://wa.me/918449481394?text=${msg}`);
 
 closePopup();
