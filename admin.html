@@ -1,40 +1,87 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Admin Panel PRO</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Saffron Admin</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 
 <style>
-body{background:#111;color:white;font-family:sans-serif;padding:20px;}
-input,button{width:100%;padding:10px;margin:5px 0;}
-.card{background:#222;padding:10px;margin-top:10px;border-radius:10px;}
-img{width:60px;height:60px;}
+body{margin:0;font-family:Poppins;background:#0f0f0f;color:white;}
+
+.header{
+padding:15px;
+font-size:20px;
+font-weight:bold;
+background:linear-gradient(135deg,#ff7e5f,#feb47b);
+}
+
+.container{padding:10px;}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+gap:12px;
+}
+
+.card{
+background:#1c1c1c;
+padding:10px;
+border-radius:12px;
+box-shadow:0 0 10px #000;
+transition:0.2s;
+}
+.card:hover{transform:scale(1.03);}
+
+input{
+width:100%;
+padding:6px;
+border:none;
+border-radius:6px;
+margin-top:5px;
+}
+
+button{
+margin-top:6px;
+padding:6px;
+border:none;
+border-radius:6px;
+cursor:pointer;
+font-size:12px;
+}
+
+.btn1{background:gold;}
+.btn2{background:red;color:white;}
+.btn3{background:#00c853;color:white;}
+
+.orderBox{
+background:#1c1c1c;
+margin-top:10px;
+padding:10px;
+border-radius:10px;
+}
 </style>
 </head>
 
 <body>
 
-<h2>🔥 Admin Panel</h2>
+<div class="header">🔥 Saffron Admin Panel</div>
 
-<input id="name" placeholder="Item Name">
-<input id="price" type="number" placeholder="Price">
-<input type="file" id="file">
-<label><input type="checkbox" id="sold"> Sold Out</label>
+<div class="container">
 
-<button onclick="saveItem()">Save Item</button>
+<h3>🛒 Items Control</h3>
+<div id="items" class="grid"></div>
 
-<h3>📦 Items</h3>
-<div id="items"></div>
-
-<h3>🧾 Orders</h3>
+<h3>📦 Orders</h3>
 <div id="orders"></div>
+
+</div>
 
 <script>
 
+// FIREBASE
 const firebaseConfig = {
   apiKey: "AIzaSyBftbnp4hW65s5SQNwkizgp_nY4jfk80l4",
   authDomain: "saffron-new.firebaseapp.com",
@@ -45,111 +92,96 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
-
 const db = firebase.firestore();
-const storage = firebase.storage();
 
-db.settings({ experimentalForceLongPolling: true });
+let allItems=[];
 
-let editId = null;
-
-// 🔥 SAVE ITEM WITH IMAGE
-async function saveItem(){
-  let name = nameEl.value;
-  let price = Number(priceEl.value);
-  let file = fileEl.files[0];
-  let sold = soldEl.checked;
-
-  if(!name || !price){
-    alert("Fill fields");
-    return;
-  }
-
-  let imgURL = "";
-
-  if(file){
-    let ref = storage.ref("items/" + file.name);
-    await ref.put(file);
-    imgURL = await ref.getDownloadURL();
-  }
-
-  if(editId){
-    db.collection("items").doc(editId).update({
-      name, price, sold,
-      ...(imgURL && {img: imgURL})
-    });
-    editId = null;
-  }else{
-    db.collection("items").add({
-      name, price, sold, img: imgURL
-    });
-  }
-
-  clearForm();
-}
-
-// 🔥 LOAD ITEMS
+// LOAD ITEMS
 db.collection("items").onSnapshot(snap=>{
-  let html="";
-  snap.forEach(doc=>{
-    let d = doc.data();
-
-    html+=`
-    <div class="card">
-      <img src="${d.img}">
-      <b>${d.name}</b> ₹${d.price}<br>
-      ${d.sold ? "❌ Sold" : "✅ Available"}<br>
-
-      <button onclick="edit('${doc.id}','${d.name}',${d.price},'${d.img}',${d.sold})">Edit</button>
-      <button onclick="del('${doc.id}')">Delete</button>
-    </div>`;
-  });
-  items.innerHTML = html;
+allItems=[];
+snap.forEach(doc=>{
+let d=doc.data();
+allItems.push({id:doc.id,...d});
+});
+renderItems();
 });
 
-// 🔥 DELETE
-function del(id){
-  db.collection("items").doc(id).delete();
-}
+// RENDER ITEMS
+function renderItems(){
+let html="";
+allItems.forEach(item=>{
+html+=`
+<div class="card">
 
-// 🔥 EDIT
-function edit(id,name,price,img,sold){
-  nameEl.value=name;
-  priceEl.value=price;
-  soldEl.checked=sold;
-  editId=id;
-}
+<h4>${item.name}</h4>
 
-// 🔥 CLEAR
-function clearForm(){
-  nameEl.value="";
-  priceEl.value="";
-  fileEl.value="";
-  soldEl.checked=false;
-}
+<div>₹${item.price || (item.half+" / "+item.full)}</div>
 
-// 🔥 LOAD ORDERS
-db.collection("orders").onSnapshot(snap=>{
-  let html="";
-  snap.forEach(doc=>{
-    let o = doc.data();
+<div>Status: ${item.sold ? "❌ Sold Out" : "✅ Available"}</div>
 
-    html+=`
-    <div class="card">
-      <b>${o.name}</b><br>
-      ${o.phone}<br>
-      ₹${o.total}<br>
-      ${o.items}
-    </div>`;
-  });
-  orders.innerHTML = html;
+<input id="disc-${item.id}" placeholder="Discount %">
+
+<button class="btn1" onclick="applyDiscount('${item.id}')">Apply Discount</button>
+
+<button class="btn2" onclick="toggleSold('${item.id}', ${item.sold})">
+${item.sold ? "Remove Sold Out" : "Mark Sold Out"}
+</button>
+
+</div>`;
 });
 
-// DOM shortcut
-const nameEl = document.getElementById("name");
-const priceEl = document.getElementById("price");
-const fileEl = document.getElementById("file");
-const soldEl = document.getElementById("sold");
+document.getElementById("items").innerHTML=html;
+}
+
+// SOLD OUT
+function toggleSold(id,current){
+db.collection("items").doc(id).update({
+sold: !current
+});
+}
+
+// DISCOUNT
+function applyDiscount(id){
+let val=document.getElementById("disc-"+id).value;
+if(!val) return alert("Enter discount");
+db.collection("items").doc(id).update({
+discount: Number(val)
+});
+alert("Discount Applied");
+}
+
+// LOAD ORDERS LIVE
+db.collection("orders").orderBy("time","desc")
+.onSnapshot(snap=>{
+let html="";
+snap.forEach(doc=>{
+let o=doc.data();
+
+html+=`
+<div class="orderBox">
+
+<div>👤 ${o.name}</div>
+<div>📞 ${o.phone}</div>
+<div>💰 ₹${o.total}</div>
+<div>🍽 ${o.ordertype}</div>
+<div>💳 ${o.payment}</div>
+
+${o.address ? `<div>📍 ${o.address}</div>`:""}
+
+<hr>
+
+<button class="btn3" onclick="completeOrder('${doc.id}')">Mark Done</button>
+
+</div>`;
+});
+
+document.getElementById("orders").innerHTML=html;
+});
+
+// DELETE ORDER
+function completeOrder(id){
+db.collection("orders").doc(id).delete();
+}
 
 </script>
 
