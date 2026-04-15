@@ -11,33 +11,26 @@
 <style>
 body{margin:0;font-family:Poppins;background:#0f0f0f;color:white;}
 
+/* 🔥 PREMIUM HEADER FIXED */
 .header{
 display:flex;
 align-items:center;
 gap:10px;
 padding:10px;
-background:rgba(255,126,95,0.7);  /* glass color */
-backdrop-filter:blur(10px);       /* 🔥 glass effect */
+background:rgba(255,126,95,0.8);
+backdrop-filter:blur(10px);
 -webkit-backdrop-filter:blur(10px);
 position:sticky;
 top:0;
 z-index:1000;
-box-shadow:0 4px 20px rgba(0,0,0,0.4); /* shadow */
-border-bottom:1px solid rgba(255,255,255,0.2);
-}
-display:flex;
-align-items:center;
-gap:10px;
-padding:10px;
-background:linear-gradient(135deg,#ff7e5f,#feb47b);
-position:sticky;
-top:0;
-z-index:1000;
+box-shadow:0 4px 20px rgba(0,0,0,0.4);
 }
 
+/* ❗ ONLY HEADER IMAGE (NO GLOBAL IMG BUG) */
 .header img{
-width:34px !important;
-height:auto !important;
+width:34px;
+height:auto;
+border-radius:50%;
 }
 
 .header h2{
@@ -123,6 +116,7 @@ display:flex;flex-direction:column;gap:8px;
 
 <header class="header">
 
+<!-- ✅ FIXED LOGO -->
 <img src="https://ajaydagaur382-design.github.io/Saffronfood/logo.jpg">
 
 <div>
@@ -131,6 +125,7 @@ display:flex;flex-direction:column;gap:8px;
 </div>
 
 </header>
+
 <div id="offer" class="offer"></div>
 
 <div class="search">
@@ -201,7 +196,7 @@ let globalDiscount = 0;
 
 const orderList = ["burger","snacks","noodles","sandwich","pasta","momos","paratha","maggi","rice","drink","extra"];
 
-// 🔥 GLOBAL DISCOUNT LISTENER
+// GLOBAL DISCOUNT
 db.collection("settings").doc("main").onSnapshot(doc=>{
 if(doc.exists){
 globalDiscount = doc.data().discount || 0;
@@ -255,16 +250,7 @@ html+=`
 <h4>${item.name}</h4>
 
 <div class="price">
-${
-item.price 
-? item.discount 
-  ? `<s>₹${item.price}</s> ₹${Math.floor(item.price - (item.price*item.discount/100))}`
-  : `₹${item.price}`
-: item.discount
-  ? `Half <s>₹${item.half}</s> ₹${Math.floor(item.half - (item.half*item.discount/100))} 
-     / Full <s>₹${item.full}</s> ₹${Math.floor(item.full - (item.full*item.discount/100))}`
-  : `Half ₹${item.half} / Full ₹${item.full}`
-}
+${item.price ? `₹${item.price}` : `Half ₹${item.half} / Full ₹${item.full}`}
 </div>
 
 ${item.sold
@@ -283,7 +269,6 @@ menu.innerHTML=html;
 updateTotal();
 }
 
-// ADD
 function handleAdd(i){
 if(items[i].half && items[i].full){
 selectedIndex=i;
@@ -324,12 +309,10 @@ let t=0;
 for(let i in cart){
 t+=cart[i].price*cart[i].qty;
 }
-
 let final = globalDiscount ? t - (t * globalDiscount / 100) : t;
 total.innerText=final;
 }
 
-// POPUP
 function openPopup(){
 if(Object.keys(cart).length==0){alert("Add items");return;}
 popup.style.display="flex";
@@ -339,52 +322,24 @@ function closePopup(){
 popup.style.display="none";
 }
 
-// ORDER FUNCTION SAME
 function order(){
-
-let name = document.getElementById("name").value;
-let phone = document.getElementById("phone").value;
-let address = document.getElementById("address").value;
-let payment = document.getElementById("payment").value;
-let ordertype = document.getElementById("ordertype").value;
-
-if(!name || !phone){
-alert("Name & Phone required");
-return;
-}
-
-if(ordertype === "Take Away" && !address){
-alert("Address required");
-return;
-}
+let name = name.value;
+let phone = phone.value;
+let address = address.value;
+let payment = payment.value;
+let ordertype = ordertype.value;
 
 let msg="🍔 *Saffron Order*%0A%0A";
 
 for(let i in cart){
 let item=items[i];
-msg+=`${item.name} ${cart[i].size ? "(" + cart[i].size + ")" : ""} x${cart[i].qty} = ₹${cart[i].price*cart[i].qty}%0A`;
+msg+=`${item.name} x${cart[i].qty} = ₹${cart[i].price*cart[i].qty}%0A`;
 }
 
 msg+=`%0A💰 ₹${total.innerText}%0A%0A`;
-
-msg+=`👤 ${name}%0A`;
-msg+=`📞 ${phone}%0A`;
-msg+=`🍽 ${ordertype}%0A`;
-msg+=`💳 ${payment}%0A`;
-
-if(ordertype==="Take Away"){
-msg+=`📍 ${address}%0A`;
-}
-
-db.collection("orders").add({
-name, phone, address, payment, ordertype,
-total: total.innerText,
-cart: cart,
-time: new Date()
-});
+msg+=`👤 ${name}%0A📞 ${phone}%0A`;
 
 window.open(`https://wa.me/918449481394?text=${msg}`);
-
 closePopup();
 }
 </script>
