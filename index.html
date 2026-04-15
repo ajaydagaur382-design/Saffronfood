@@ -323,23 +323,55 @@ popup.style.display="none";
 }
 
 function order(){
-let name = name.value;
-let phone = phone.value;
-let address = address.value;
-let payment = payment.value;
-let ordertype = ordertype.value;
+
+let name = document.getElementById("name").value;
+let phone = document.getElementById("phone").value;
+let address = document.getElementById("address").value;
+let payment = document.getElementById("payment").value;
+let ordertype = document.getElementById("ordertype").value;
+
+if(!name || !phone){
+alert("Name & Phone required");
+return;
+}
+
+if(ordertype === "Take Away" && !address){
+alert("Address required");
+return;
+}
 
 let msg="🍔 *Saffron Order*%0A%0A";
 
+// ITEMS
 for(let i in cart){
 let item=items[i];
-msg+=`${item.name} x${cart[i].qty} = ₹${cart[i].price*cart[i].qty}%0A`;
+msg+=`${item.name} ${cart[i].size ? "(" + cart[i].size + ")" : ""} x${cart[i].qty} = ₹${cart[i].price*cart[i].qty}%0A`;
 }
 
+// TOTAL
 msg+=`%0A💰 ₹${total.innerText}%0A%0A`;
-msg+=`👤 ${name}%0A📞 ${phone}%0A`;
 
+// DETAILS
+msg+=`👤 ${name}%0A`;
+msg+=`📞 ${phone}%0A`;
+msg+=`🍽 ${ordertype}%0A`;
+msg+=`💳 ${payment}%0A`;
+
+if(ordertype==="Take Away"){
+msg+=`📍 ${address}%0A`;
+}
+
+// SAVE
+db.collection("orders").add({
+name, phone, address, payment, ordertype,
+total: total.innerText,
+cart: cart,
+time: new Date()
+});
+
+// WHATSAPP
 window.open(`https://wa.me/918449481394?text=${msg}`);
+
 closePopup();
 }
 </script>
