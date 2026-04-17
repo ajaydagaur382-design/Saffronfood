@@ -302,7 +302,11 @@ add(i, p);
 }
 
 function selectHalf(){
-add(selectedIndex, items[selectedIndex].half, "Half");
+let p = items[selectedIndex].discount
+  ? Math.floor(items[selectedIndex].half - (items[selectedIndex].half * items[selectedIndex].discount / 100))
+  : items[selectedIndex].half;
+
+add(selectedIndex, p, "Half");
 closeSize();
 }
 
