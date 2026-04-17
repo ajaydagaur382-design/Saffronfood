@@ -293,7 +293,11 @@ if(items[i].half && items[i].full){
 selectedIndex=i;
 sizePopup.style.display="flex";
 }else{
-add(i, items[i].price);
+let p = items[i].discount 
+  ? Math.floor(items[i].price - (items[i].price * items[i].discount / 100))
+  : items[i].price;
+
+add(i, p);
 }
 }
 
