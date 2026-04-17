@@ -235,7 +235,6 @@ let html="";
 let search=document.getElementById("search").value.toLowerCase();
 
 orderList.forEach(cat=>{
-let filtered=items.filter(i=>i.category===cat && i.name.toLowerCase().includes(search));
 if(filtered.length==0) return;
 
 html+=`<div class="category">${cat.toUpperCase()}</div>`;
