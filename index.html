@@ -311,7 +311,11 @@ closeSize();
 }
 
 function selectFull(){
-add(selectedIndex, items[selectedIndex].full, "Full");
+let p = items[selectedIndex].discount
+  ? Math.floor(items[selectedIndex].full - (items[selectedIndex].full * items[selectedIndex].discount / 100))
+  : items[selectedIndex].full;
+
+add(selectedIndex, p, "Full");
 closeSize();
 }
 
