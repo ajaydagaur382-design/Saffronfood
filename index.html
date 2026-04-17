@@ -254,6 +254,21 @@ html+=`
 <h4>${item.name}</h4>
 
 <div class="price">
+
+${item.discount ? `<div style="color:#00ff9d;font-size:11px;font-weight:bold;">🔥 Flat ${item.discount}% OFF</div>` : ""}
+
+${
+item.price 
+? item.discount 
+  ? `<s>₹${item.price}</s> ₹${Math.floor(item.price - (item.price*item.discount/100))}`
+  : `₹${item.price}`
+: item.discount
+  ? `Half <s>₹${item.half}</s> ₹${Math.floor(item.half - (item.half*item.discount/100))} 
+     / Full <s>₹${item.full}</s> ₹${Math.floor(item.full - (item.full*item.discount/100))}`
+  : `Half ₹${item.half} / Full ₹${item.full}`
+}
+
+</div>
 ${item.price ? `₹${item.price}` : `Half ₹${item.half} / Full ₹${item.full}`}
 </div>
 
