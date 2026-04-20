@@ -63,11 +63,11 @@ box-shadow:0 0 20px rgba(255,215,0,0.3);
 
 <body>
 
-<!-- 🔐 LOGIN SCREEN -->
+<!-- 🔐 BMS -->
 <div id="loginBox">
 <div class="loginCard">
 
-<h2 style="color:gold;">Admin Login</h2>
+<h2 style="color:gold;">BMS</h2>
 
 <input id="user" placeholder="User ID">
 <input id="pass" type="password" placeholder="Password">
@@ -115,7 +115,7 @@ function login(){
 let u = document.getElementById("user").value;
 let p = document.getElementById("pass").value;
 
-if(u === "SAFFRON" && p === "258000"){
+if(u === "Saffron" && p === "258000"){
   document.getElementById("loginBox").style.display="none";
   document.getElementById("mainApp").style.display="block";
 }else{
