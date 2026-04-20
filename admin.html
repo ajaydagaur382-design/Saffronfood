@@ -9,6 +9,7 @@
 
 <style>
 body{margin:0;background:#0b0b0b;color:white;font-family:Poppins;}
+*{transition:0.3s;}
 
 .header{
 text-align:center;
@@ -19,32 +20,17 @@ border-bottom:1px solid gold;
 }
 
 .container{display:flex;gap:15px;padding:15px;}
-
 .left{flex:2;max-height:85vh;overflow:auto;}
 .right{flex:1;background:#111;padding:15px;border-radius:10px;border:1px solid gold;}
 
-.card{
-background:#151515;
-margin-bottom:12px;
-padding:12px;
-border-radius:10px;
-}
-
+.card{background:#151515;margin-bottom:12px;padding:12px;border-radius:10px;}
 .top{display:flex;justify-content:space-between;}
 
-.btns{
-display:flex;
-gap:6px;
-margin-top:8px;
-flex-wrap:wrap;
-}
+.btns{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
 
 button{
-border:none;
-padding:6px 8px;
-border-radius:6px;
-cursor:pointer;
-font-size:11px;
+border:none;padding:6px 8px;border-radius:6px;
+cursor:pointer;font-size:11px;
 }
 
 .price{background:#00c853;color:white;}
@@ -53,35 +39,55 @@ font-size:11px;
 .delete{background:#ff1744;color:white;}
 
 input{
-width:100%;
-padding:8px;
-margin-top:8px;
-border:none;
-border-radius:6px;
-background:#222;color:white;
+width:100%;padding:8px;margin-top:8px;
+border:none;border-radius:6px;background:#222;color:white;
 }
 
 .big{
-width:100%;
-padding:10px;
-background:gold;
-margin-top:10px;
-font-weight:bold;
+width:100%;padding:10px;background:gold;
+margin-top:10px;font-weight:bold;
 }
 
+/* 🔐 LOGIN UI */
+#loginBox{
+height:100vh;display:flex;justify-content:center;align-items:center;
+background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+}
+.loginCard{
+background:#111;padding:25px;border-radius:12px;
+width:280px;text-align:center;
+box-shadow:0 0 20px rgba(255,215,0,0.3);
+}
 </style>
 </head>
 
 <body>
 
+<!-- 🔐 LOGIN SCREEN -->
+<div id="loginBox">
+<div class="loginCard">
+
+<h2 style="color:gold;">Admin Login</h2>
+
+<input id="user" placeholder="User ID">
+<input id="pass" type="password" placeholder="Password">
+
+<button onclick="login()" class="big">Login</button>
+
+<p id="err" style="color:red;font-size:12px;"></p>
+
+</div>
+</div>
+
+<!-- 🔥 ORIGINAL APP (UNCHANGED) -->
+<div id="mainApp" style="display:none;">
+
 <div class="header">Business management system</div>
 
 <div class="container">
 
-<!-- LEFT ITEMS -->
 <div class="left" id="items"></div>
 
-<!-- RIGHT PANEL -->
 <div class="right">
 
 <h3>Add Item</h3>
@@ -98,10 +104,24 @@ font-weight:bold;
 <button class="big" onclick="setGlobal()">Apply</button>
 
 </div>
+</div>
 
 </div>
 
 <script>
+
+// 🔐 LOGIN
+function login(){
+let u = document.getElementById("user").value;
+let p = document.getElementById("pass").value;
+
+if(u === "SAFFRON" && p === "258000"){
+  document.getElementById("loginBox").style.display="none";
+  document.getElementById("mainApp").style.display="block";
+}else{
+  document.getElementById("err").innerText="Wrong Password";
+}
+}
 
 // FIREBASE
 const firebaseConfig = {
@@ -162,33 +182,33 @@ ${item.sold ? "Undo Sold" : "Mark Sold"}
 document.getElementById("items").innerHTML=html;
 }
 
-// 🔥 UPDATE PRICE
+// UPDATE PRICE
 function updatePrice(id){
 let p=prompt("New Price:");
 if(!p) return;
 db.collection("items").doc(id).update({price:Number(p)});
 }
 
-// 🔥 SOLD OUT
+// SOLD OUT
 function toggleSold(id,current){
 db.collection("items").doc(id).update({sold:!current});
 }
 
-// 🔥 ITEM DISCOUNT
+// ITEM DISCOUNT
 function setDiscount(id){
 let d=prompt("Discount %:");
 if(!d) return;
 db.collection("items").doc(id).update({discount:Number(d)});
 }
 
-// 🔥 DELETE
+// DELETE
 function deleteItem(id){
 if(confirm("Delete item?")){
 db.collection("items").doc(id).delete();
 }
 }
 
-// 🔥 ADD ITEM
+// ADD ITEM
 function addItem(){
 let name=nameEl.value;
 let price=priceEl.value;
@@ -207,7 +227,7 @@ img
 alert("Added");
 }
 
-// 🔥 GLOBAL DISCOUNT
+// GLOBAL DISCOUNT
 function setGlobal(){
 let val=gdisc.value;
 if(!val) return;
