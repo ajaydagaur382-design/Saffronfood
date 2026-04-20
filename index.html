@@ -218,7 +218,7 @@ name:d.name,
 price:d.price || null,
 half:d.half || null,
 full:d.full || null,
-category:d.category,
+category:(d.category || "").toLowerCase(),
 discount:d.discount || 0,
 sold:d.sold || false,
 img: d.img && d.img.startsWith("http")
